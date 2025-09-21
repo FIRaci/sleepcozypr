@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>The Cozy Web - Không gian thư giãn & giấc ngủ an lành</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.2/dist/dexie.min.js" defer></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@duetds/date-picker@1.4.0/dist/duet/duet.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-default loading">
+    <div id="dynamic-bg" class="bg-gradient"><div id="sun"></div><div id="moon"><div class="moon-phase-overlay"></div></div></div>
+
+    <header>
+        <nav class="w-full h-full px-6 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-bold text-white">The Cozy Web</a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#home" class="nav-link text-white hover:text-yellow-300 active" data-i18n-key="nav_home">Home</a>
+                <a href="#features" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_features">Features</a>
+                <a href="#experience" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_experience">Experience</a>
+                <a href="#library" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_library">Library</a>
+                <a href="#stats" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_community">Community</a>
+                <a href="#about" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_about">About</a>
+                <!-- Language Switcher -->
+                <div id="language-switcher" class="relative">
+                    <button id="language-switcher-button" class="flex items-center text-white focus:outline-none">
+                        <i class="fas fa-globe mr-2"></i>
+                        <span id="current-lang-text">VI</span>
+                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                    </button>
+                    <div id="language-options" class="absolute right-0 mt-2 w-32 bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-xl hidden">
+                        <a href="#" class="lang-option block px-4 py-2 text-sm text-white hover:bg-gray-700" data-lang="vi">Tiếng Việt</a>
+                        <a href="#" class="lang-option block px-4 py-2 text-sm text-white hover:bg-gray-700" data-lang="en">English</a>
+                        <a href="#" class="lang-option block px-4 py-2 text-sm text-white hover:bg-gray-700" data-lang="ja">日本語</a>
+                    </div>
+                </div>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-white" aria-label="Open menu"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
+        </nav>
+        <div id="mobile-menu" class="md:hidden bg-gray-900/80 backdrop-blur-sm">
+            <a href="#home" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_home">Home</a>
+            <a href="#features" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_features">Features</a>
+            <a href="#experience" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_experience">Experience</a>
+            <a href="#library" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_library">Library</a>
+            <a href="#stats" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_community">Community</a>
+            <a href="#about" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_about">About</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="section text-center">
+            <div id="clock" class="text-6xl md:text-8xl font-light text-white"></div>
+            <h1 class="text-2xl md:text-4xl font-bold text-white my-4" style="text-shadow: 0 0 10px #F0E68C;" data-i18n-key="home_title">Không gian thư giãn & giấc ngủ an lành</h1>
+            <p class="text-gray-300 max-w-xl mb-8" data-i18n-key="home_subtitle">Nơi công nghệ và sự yên bình giao thoa, giúp bạn tìm lại sự cân bằng và bắt đầu mỗi ngày mới đầy năng lượng.</p>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="open-sidebar-cta" class="cta-button cta-primary font-bold py-3 px-8 rounded-full" data-i18n-key="home_cta_primary">Bắt đầu thư giãn</button>
+                <a href="#features" class="cta-button cta-secondary font-bold py-3 px-8 rounded-full" data-i18n-key="home_cta_secondary">Khám phá tính năng</a>
+            </div>
+        </section>
+
+        <!-- All sections below have data-i18n-key attributes for translation -->
+        <section id="features" class="section bg-black bg-opacity-20">
+            <div class="container mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4" data-i18n-key="features_title">Tính năng Vượt trội</h2>
+                <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="features_subtitle">Những công cụ được thiết kế để nâng niu giấc ngủ và tối ưu hóa sự thư giãn của bạn.</p>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="feature-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-brain text-5xl text-purple-300"></i></div><h3 class="text-2xl font-bold mb-2" data-i18n-key="feature_ai_title">Trợ lý AI Thông Minh</h3><p class="text-gray-400" data-i18n-key="feature_ai_desc">Tự động đặt lịch báo thức ngủ từ mô tả lịch trình của bạn bằng ngôn ngữ tự nhiên.</p></div>
+                    <div class="feature-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-music text-5xl text-cyan-300"></i></div><h3 class="text-2xl font-bold mb-2" data-i18n-key="feature_sound_title">Thư viện Âm thanh</h3><p class="text-gray-400" data-i18n-key="feature_sound_desc">Tạo bộ sưu tập âm thanh của riêng bạn, từ mặc định đến cá nhân, và đánh dấu yêu thích.</p></div>
+                    <div class="feature-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-sync-alt text-5xl text-yellow-300"></i></div><h3 class="text-2xl font-bold mb-2" data-i18n-key="feature_cycle_title">Chu kỳ Ngày-Đêm</h3><p class="text-gray-400" data-i18n-key="feature_cycle_desc">Trải nghiệm không gian thay đổi tự động từ bình minh, ban ngày, hoàng hôn đến ban đêm.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="experience" class="section">
+            <div class="container mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4" data-i18n-key="experience_title">Trải nghiệm Tập trung</h2>
+                <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="experience_subtitle">Sử dụng phương pháp Pomodoro để làm việc hiệu quả hơn và dành thời gian nghỉ ngơi hợp lý.</p>
+                <div class="pomodoro-card w-full max-w-md mx-auto p-8 rounded-2xl">
+                    <div class="flex justify-center bg-gray-900/50 rounded-full p-1 mb-8">
+                        <button data-mode="pomodoro" class="pomodoro-mode-btn active w-1/3 py-2 px-4 rounded-full font-semibold" data-i18n-key="pomodoro_mode_pomo">Pomodoro</button>
+                        <button data-mode="shortBreak" class="pomodoro-mode-btn w-1/3 py-2 px-4 rounded-full font-semibold" data-i18n-key="pomodoro_mode_short">Nghỉ ngắn</button>
+                        <button data-mode="longBreak" class="pomodoro-mode-btn w-1/3 py-2 px-4 rounded-full font-semibold" data-i18n-key="pomodoro_mode_long">Nghỉ dài</button>
+                    </div>
+                    <div id="pomodoro-timer" class="text-7xl md:text-8xl font-bold my-8">25:00</div>
+                    <div class="flex items-center justify-center space-x-4">
+                        <button id="pomodoro-control-btn" class="pomodoro-start-btn w-48 text-2xl font-bold py-3 px-8 rounded-full uppercase" data-i18n-key="pomodoro_start_btn">Bắt đầu</button>
+                        <button id="pomodoro-reset-btn" title="Reset" class="text-gray-400 hover:text-white transition-colors" data-i18n-key-title="pomodoro_reset_btn_title"><svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-2.693L9.348 5.975a8.25 8.25 0 00-11.664 0L2.985 9.348m19.03-2.693l-3.181 3.183a8.25 8.25 0 01-11.664 0l-3.181-3.183" /></svg></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="library" class="section bg-black bg-opacity-20">
+            <div class="container mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4" data-i18n-key="library_title">Thư viện Giao diện</h2>
+                <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="library_subtitle">Chọn một không gian phù hợp với tâm trạng của bạn, hoặc để chúng tôi tự động thay đổi theo thời gian thực.</p>
+                <div id="theme-selector" class="grid grid-cols-2 md:grid-cols-5 gap-8">
+                    <div class="theme-card rounded-xl" data-theme="theme-auto"><img src="https://placehold.co/600x400/777/FFF?text=Auto" loading="lazy" alt="Auto mode" class="w-full h-48 object-cover rounded-t-xl"><div class="p-4 bg-gray-900/50 rounded-b-xl"><h3 class="font-semibold text-lg" data-i18n-key="theme_auto">Theo Thời Gian</h3></div></div>
+                    <div class="theme-card rounded-xl" data-theme="theme-default"><img src="https://placehold.co/600x400/0f0c29/E0E0E0?text=Quiet+Night" loading="lazy" alt="Quiet Night" class="w-full h-48 object-cover rounded-t-xl"><div class="p-4 bg-gray-900/50 rounded-b-xl"><h3 class="font-semibold text-lg" data-i18n-key="theme_night">Đêm Tĩnh Lặng</h3></div></div>
+                    <div class="theme-card rounded-xl" data-theme="theme-sunset"><img src="https://placehold.co/600x400/F3904F/3B4371?text=Warm+Sunset" loading="lazy" alt="Warm Sunset" class="w-full h-48 object-cover rounded-t-xl"><div class="p-4 bg-gray-900/50 rounded-b-xl"><h3 class="font-semibold text-lg" data-i18n-key="theme_sunset">Hoàng Hôn Ấm Áp</h3></div></div>
+                    <div class="theme-card rounded-xl" data-theme="theme-dawn"><img src="https://placehold.co/600x400/b6fbff/83a4d4?text=Gentle+Dawn" loading="lazy" alt="Gentle Dawn" class="w-full h-48 object-cover rounded-t-xl"><div class="p-4 bg-gray-900/50 rounded-b-xl"><h3 class="font-semibold text-lg" data-i18n-key="theme_dawn">Bình Minh Dịu Êm</h3></div></div>
+                    <div class="theme-card rounded-xl" data-theme="theme-beach"><img src="https://placehold.co/600x400/87CEEB/FFFFFF?text=Blue+Sea+Day" loading="lazy" alt="Blue Sea Day" class="w-full h-48 object-cover rounded-t-xl"><div class="p-4 bg-gray-900/50 rounded-b-xl"><h3 class="font-semibold text-lg" data-i18n-key="theme_beach">Ngày Biển Xanh</h3></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="stats" class="section">
+            <div class="container mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4" data-i18n-key="community_title">Cộng đồng Chill Cùng Nhau</h2>
+                <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="community_subtitle">Mỗi khoảnh khắc thư giãn của bạn góp phần tạo nên một không gian yên bình chung.</p>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-users text-5xl text-purple-300"></i></div><h3 id="global-users" class="text-4xl font-bold mb-2">1,234</h3><p class="text-gray-400" data-i18n-key="stats_global_users">Tâm hồn đồng điệu</p></div>
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-headphones-alt text-5xl text-cyan-300"></i></div><h3 id="global-hours" class="text-4xl font-bold mb-2">5,678</h3><p class="text-gray-400" data-i18n-key="stats_global_hours">Giờ đã thư giãn</p></div>
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-mouse-pointer text-5xl text-yellow-300"></i></div><h3 id="global-visits" class="text-4xl font-bold mb-2">9,101</h3><p class="text-gray-400" data-i18n-key="stats_global_visits">Lượt ghé thăm</p></div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="about" class="section bg-black bg-opacity-20">
+            <div class="container mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4" data-i18n-key="about_title">Về The Cozy Web</h2>
+                <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="about_subtitle">Đây là một dự án tâm huyết được tạo ra với mục tiêu mang lại sự bình yên trong tâm hồn và cải thiện chất lượng giấc ngủ cũng như hiệu suất làm việc của bạn qua từng dòng code.</p>
+                <div class="w-full max-w-xl mx-auto bg-gray-900/50 p-8 rounded-2xl border border-gray-700/50">
+                    <h3 class="text-2xl font-semibold mb-6" data-i18n-key="contact_title">Gửi Lời Nhắn Cho Chúng Tôi</h3>
+                    <form id="contact-form" class="space-y-4 text-left">
+                        <div><label for="contact-name" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="contact_name">Tên của bạn</label><input type="text" id="contact-name" class="form-input" required></div>
+                        <div><label for="contact-email" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="contact_email">Email</label><input type="email" id="contact-email" class="form-input" required></div>
+                        <div><label for="contact-message" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="contact_message">Nội dung</label><textarea id="contact-message" rows="4" class="form-textarea" required></textarea></div>
+                        <button type="submit" class="w-full cta-button cta-primary font-bold py-3 px-8 rounded-full !mt-6" data-i18n-key="contact_send">Gửi</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-black bg-opacity-30 text-center py-6"><p data-i18n-key="footer_text">&copy; 2025 The Cozy Web. All Rights Reserved.</p></footer>
+    
+    <div class="sidebar-container">
+        <div id="slider-nav" class="swiper-container-vertical">
+            <div class="swiper-wrapper">
+                <!-- Tab 0: Timer -->
+                <div class="swiper-slide">
+                    <div class="w-full text-white">
+                        <h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_alarm_title">Cài đặt Báo thức</h2>
+                        <form id="alarm-form" class="space-y-4">
+                            <div><label class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_date">Chọn ngày</label><duet-date-picker identifier="alarmDate"></duet-date-picker></div>
+                            <div class="relative"><label for="custom-time-input" class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_time">Chọn giờ</label><div id="custom-time-input" class="custom-time-input cursor-pointer flex justify-between items-center"><span id="time-display">--:-- --</span><i class="fas fa-clock text-gray-400"></i></div><input type="hidden" id="alarm-time-value" name="alarm-time"></div>
+                            <div><label for="alarm-label" class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_label">Tên báo thức</label><input type="text" id="alarm-label" class="form-input" data-i18n-key-placeholder="alarm_form_label_placeholder"></div>
+                            <div><label for="alarm-sound" class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_sound">Âm thanh</label><select id="alarm-sound" class="form-select"></select></div>
+                            <div class="flex items-center justify-between pt-2"><span class="text-sm font-medium" data-i18n-key="alarm_form_repeat">Lặp lại mỗi ngày</span><label class="toggle-switch"><input type="checkbox" id="alarm-repeat"><span class="slider"></span></label></div>
+                            <button type="submit" id="save-alarm-btn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-4 rounded-lg transition-colors !mt-6" data-i18n-key="alarm_form_save">Lưu Báo thức</button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Tab 1: Schedule -->
+                <div class="swiper-slide"><div class="w-full text-white"><h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_schedule_title">Lịch trình Báo thức</h2><div id="alarm-list" class="space-y-3 w-full"></div></div></div>
+                <!-- Tab 2: Sounds -->
+                <div class="swiper-slide"><div class="w-full text-white"><h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_sounds_title">Âm thanh Báo thức</h2><input type="file" id="sound-upload-main" class="hidden" accept="audio/*"><button onclick="document.getElementById('sound-upload-main').click()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg mb-4 transition-colors" data-i18n-key="sounds_upload_btn">Tải lên Âm thanh mới</button><div id="sound-list" class="space-y-3 w-full"></div></div></div>
+                <!-- Tab 3: Tips -->
+                <div class="swiper-slide"><div class="w-full text-white"><h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_tips_title">Mẹo cho Giấc ngủ</h2><div id="tips-list" class="space-y-4 text-gray-300 w-full"></div></div></div>
+                <!-- Tab 4: Space -->
+                <div class="swiper-slide"><div class="w-full text-white flex flex-col h-full"><div class="flex justify-between items-center mb-6 flex-shrink-0"><h2 class="text-2xl font-semibold text-center flex-grow" data-i18n-key="sidebar_space_title">Không Gian Thư Giãn</h2><button id="restore-sounds-btn" class="text-gray-400 hover:text-white transition-colors" data-i18n-key-title="space_restore_btn_title"><i class="fas fa-undo-alt"></i></button></div><div id="ambient-sounds-grid" class="grid grid-cols-2 gap-4 overflow-y-auto flex-grow p-1"></div></div></div>
+                <!-- Tab 5: Stats -->
+                <div class="swiper-slide">
+                    <div class="w-full text-white">
+                        <h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_stats_title">Hành Trình Thư Giãn</h2>
+                        <div class="space-y-5 text-lg">
+                            <div class="personal-stats-item flex justify-between items-center bg-gray-700/50 p-4 rounded-lg"><span class="flex items-center" data-i18n-key="stats_chilling_time"><i class="fas fa-clock fa-fw mr-3 text-cyan-300"></i>Tổng giờ chill</span><span id="personal-chilling-time" class="font-bold">00:00:00</span></div>
+                            <div class="personal-stats-item flex justify-between items-center bg-gray-700/50 p-4 rounded-lg"><span class="flex items-center" data-i18n-key="stats_sessions"><i class="fas fa-door-open fa-fw mr-3 text-yellow-300"></i>Số lần ghé thăm</span><span id="personal-sessions" class="font-bold">0</span></div>
+                            <div class="personal-stats-item flex justify-between items-center bg-gray-700/50 p-4 rounded-lg"><span class="flex items-center" data-i18n-key="stats_favorite_sound"><i class="fas fa-heart fa-fw mr-3 text-purple-300"></i>Âm thanh yêu thích</span><span id="personal-favorite-sound" class="font-bold" data-i18n-key="stats_no_favorite">Chưa có</span></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tab 6: AI Assistant -->
+                <div class="swiper-slide">
+                    <div class="w-full text-white flex flex-col h-full">
+                        <h2 class="text-2xl font-semibold mb-6 text-center flex-shrink-0" data-i18n-key="sidebar_ai_title">Trợ lý Cozy AI</h2>
+                        <div id="ai-chat-box" class="flex-grow overflow-y-auto p-2 space-y-4"><div class="ai-message ai" data-i18n-key="ai_welcome_message">Xin chào! Bạn cần tôi giúp đặt lịch trình ngủ nghỉ hay cần một vài lời khuyên để thư giãn?</div></div>
+                        <div id="ai-loading" class="hidden text-center p-4"><span class="ai-thinking-dot"></span><span class="ai-thinking-dot" style="animation-delay: 0.2s;"></span><span class="ai-thinking-dot" style="animation-delay: 0.4s;"></span></div>
+                        <div class="mt-4 flex-shrink-0"><form id="ai-form" class="flex items-center space-x-2"><textarea id="ai-input" class="form-textarea flex-grow" rows="2" data-i18n-key-placeholder="ai_input_placeholder"></textarea><button type="submit" id="ai-send-btn" class="bg-yellow-400 text-gray-900 rounded-lg p-3 h-full"><i class="fas fa-paper-plane"></i></button></form></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-nav">
+            <button class="tab-nav-button active" data-slide="0" data-i18n-key-title="nav_tab_timer"><i class="fas fa-stopwatch"></i></button>
+            <button class="tab-nav-button" data-slide="1" data-i18n-key-title="nav_tab_schedule"><i class="fas fa-calendar-alt"></i></button>
+            <button class="tab-nav-button" data-slide="2" data-i18n-key-title="nav_tab_sounds"><i class="fas fa-music"></i></button>
+            <button class="tab-nav-button" data-slide="3" data-i18n-key-title="nav_tab_tips"><i class="fas fa-lightbulb"></i></button>
+            <button class="tab-nav-button" data-slide="4" data-i18n-key-title="nav_tab_space"><i class="fas fa-headphones-alt"></i></button>
+            <button class="tab-nav-button" data-slide="5" data-i18n-key-title="nav_tab_stats"><i class="fas fa-chart-line"></i></button>
+            <button class="tab-nav-button" data-slide="6" data-i18n-key-title="nav_tab_ai"><i class="fas fa-robot"></i></button>
+        </div>
+    </div>
+    
+    <audio id="alarm-audio-player"></audio><audio id="ambient-player" loop></audio><audio id="pomodoro-complete-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3"></audio>
+
+    <div id="alarm-fired-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-8 text-center shadow-2xl max-w-sm mx-auto">
+            <h3 class="text-3xl font-bold text-yellow-300 mb-2" data-i18n-key="alarm_fired_title">Đến giờ rồi!</h3>
+            <p id="fired-alarm-label" class="text-xl text-white mb-4" data-i18n-key="alarm_fired_subtitle">Dậy thôi nào!</p>
+            <div id="tip-of-the-day" class="bg-gray-700/50 p-4 rounded-lg mb-6"><h4 class="font-semibold text-yellow-400 mb-2" data-i18n-key="alarm_fired_tip_title">Mẹo hay cho bạn:</h4><p id="tip-content" class="text-gray-300"></p></div>
+            <button id="dismiss-alarm-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-colors" data-i18n-key="alarm_fired_dismiss">Tắt báo thức</button>
+        </div>
+    </div>
+    
+    <div id="edit-sound-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-8 shadow-2xl max-w-sm mx-auto w-full">
+            <h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="edit_sound_title">Chỉnh sửa Âm thanh</h3>
+            <form id="edit-sound-form" class="space-y-4"><input type="hidden" id="edit-sound-id"><div><label for="edit-sound-name" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="edit_sound_name">Tên Âm thanh</label><input type="text" id="edit-sound-name" class="form-input" required></div><div><label for="edit-sound-icon" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="edit_sound_icon">Icon</label><input type="text" id="edit-sound-icon" class="form-input" data-i18n-key-placeholder="edit_sound_icon_placeholder"><p class="text-xs text-gray-500 mt-1" data-i18n-key="edit_sound_icon_desc">Dán emoji hoặc class của Font Awesome.</p></div><div class="flex justify-end space-x-4 pt-4"><button type="button" id="cancel-edit-sound" class="cta-button cta-secondary font-bold py-2 px-6 rounded-full" data-i18n-key="btn_cancel">Hủy</button><button type="submit" class="cta-button cta-primary font-bold py-2 px-6 rounded-full" data-i18n-key="btn_save">Lưu</button></div></form>
+        </div>
+    </div>
+    
+    <div id="restore-sounds-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-lg p-8 shadow-2xl max-w-sm mx-auto w-full">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-semibold text-white text-center" data-i18n-key="restore_sound_title">Âm thanh đã ẩn</h3><button id="close-restore-modal-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button></div>
+            <div id="hidden-sounds-list" class="space-y-3 max-h-64 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="time-picker-popover" class="time-picker-popover absolute rounded-lg p-2 shadow-lg hidden z-50"><div class="flex"><div id="hour-column" class="time-picker-column w-16"></div><div id="minute-column" class="time-picker-column w-16"></div><div id="ampm-column" class="time-picker-column w-16"></div></div></div>
+    
+    <div id="audio-player-container" class="audio-player-container p-4 border-t border-gray-700/50">
+        <div class="container mx-auto flex items-center justify-between text-white">
+            <div class="w-1/4"><p id="current-sound-name" class="font-semibold truncate" data-i18n-key="player_default_name">Chọn một không gian</p></div>
+            <div class="w-1/2 flex items-center justify-center space-x-4"><button id="player-play-pause-btn" class="p-2 rounded-full bg-yellow-400 text-gray-900" aria-label="Play or pause"><svg id="player-play-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg><svg id="player-pause-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" /></svg></button></div>
+            <div class="w-1/4 flex items-center space-x-2"><i class="fas fa-volume-up"></i><input type="range" id="player-volume-slider" min="0" max="1" step="0.01" value="1" class="w-full" aria-label="Volume control"></div>
+            <button id="player-close-btn" class="player-close-btn ml-4 text-gray-400 hover:text-white" aria-label="Close player"><i class="fas fa-times fa-lg"></i></button>
+        </div>
+    </div>
+    
+    <script src="translation.js" defer></script> 
+    <script src="script.js" defer></script>
+
+</body>
+</html>
+
