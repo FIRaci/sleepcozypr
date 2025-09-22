@@ -1,4 +1,10 @@
+/**
+ * CozyWebApp
+ * The main object that encapsulates all the logic for The Cozy Web application.
+ * This object-oriented approach keeps the global scope clean and organizes the code into manageable sections.
+ */
 const CozyWebApp = {
+    // --- State & Properties ---
     db: null,
     alarmWorker: null,
     swiper: null,
@@ -10,8 +16,10 @@ const CozyWebApp = {
     currentEditingSound: null,
     activeSoundKey: null,
     currentLanguage: 'vi',
-    geminiAPIKey: 'GEMINI_API_KEY',
+    geminiAPIKey: 'YOUR_GEMINI_API_KEY', // IMPORTANT: Replace with your actual Gemini API Key
+    ytPlayer: null,
 
+    // Default ambient sounds library
     ambientSoundFiles: {
         rain: { name_key: 'sound_name_rain', icon: 'fas fa-cloud-showers-heavy', url: 'https://www.soundjay.com/nature/rain-04.mp3' },
         river: { name_key: 'sound_name_river', icon: 'fas fa-water', url: 'https://www.soundjay.com/nature/sounds/river-2.mp3' },
@@ -21,11 +29,16 @@ const CozyWebApp = {
         ocean: { name_key: 'sound_name_ocean', icon: 'fas fa-water', url: 'https://www.soundjay.com/nature/ocean-wave-1.mp3' },
     },
 
+    // Pomodoro timer settings
     pomodoro: { pomodoro: 25, shortBreak: 5, longBreak: 15, sessions: 0 },
     pomodoroInterval: null,
     pomodoroRemainingTime: 25 * 60,
     pomodoroMode: 'pomodoro',
 
+    /**
+     * Main initialization function for the entire application.
+     * Runs once the DOM is fully loaded.
+     */
     init: async function() {
         this.initDatabase();
         this.initUI();
@@ -33,24 +46,60 @@ const CozyWebApp = {
         this.initWorker();
         await this.loadSavedData();
         this.createStars();
-        setInterval(() => this.updateClock(), 1000);
+        setInterval(() => this.updateClock(), 1000); // Update clock and check for theme changes
         this.initStats();
+        // Remove loading class after a short delay to allow assets to load smoothly
         setTimeout(() => { document.body.classList.remove('loading'); }, 100);
     },
 
-    getText: function(key) {
-        return translations[this.currentLanguage]?.[key] || translations['en']?.[key] || `[${key}]`;
+    /**
+     * Initializes the YouTube IFrame Player.
+     * This function is a global callback required by the YouTube IFrame Player API.
+     */
+    initYTPlayer: function() {
+        this.ytPlayer = new YT.Player('youtube-player', {
+            height: '100%',
+            width: '100%',
+            playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'modestbranding': 1 },
+            events: {
+                'onStateChange': (event) => {
+                    // When the video ends, hide the player
+                    if (event.data === YT.PlayerState.ENDED) {
+                        document.getElementById('youtube-player-wrapper').classList.add('hidden');
+                    }
+                }
+            }
+        });
     },
 
+    // --- Core Systems: I18n, Database, Worker, UI ---
+
+    /**
+     * Retrieves a translated string for a given key based on the current language.
+     * @param {string} key - The translation key from the `translations.js` file.
+     * @returns {string} The translated text, falling back to English or the key itself.
+     */
+    getText: function(key) {
+        return translations[this.currentLanguage]?.[key] 
+            || translations['en']?.[key] 
+            || `[${key}]`; // Fallback
+    },
+
+    /**
+     * Sets the application's language, updates all UI text, and saves the setting.
+     * @param {string} lang - The language code (e.g., 'vi', 'en', 'ja').
+     */
     setLanguage: function(lang) {
         if (!translations[lang]) return;
         this.currentLanguage = lang;
         document.documentElement.lang = lang;
 
+        // Update all elements with translation keys
         document.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = this.getText(el.getAttribute('data-i18n-key')));
         document.querySelectorAll('[data-i18n-key-placeholder]').forEach(el => el.placeholder = this.getText(el.getAttribute('data-i18n-key-placeholder')));
         document.querySelectorAll('[data-i18n-key-title]').forEach(el => el.title = this.getText(el.getAttribute('data-i18n-key-title')));
 
+        // Re-render components that depend on language strings
         this.renderAlarmList();
         this.renderSoundList();
         this.renderAmbientSoundGrid();
@@ -62,89 +111,172 @@ const CozyWebApp = {
         this.db.settings.put({ key: 'language', value: lang });
     },
 
+    /**
+     * Initializes the Dexie.js database for all client-side storage.
+     * Defines tables for alarms, user sounds, tips, and general settings.
+     */
     initDatabase: function() {
         this.db = new Dexie('TheCozyWebDB');
-        this.db.version(9).stores({
-            alarms: '++id, time, managedByAI',
-            userSounds: '++id, name, icon, isFavorite',
+        this.db.version(11).stores({
+            alarms: '++id, time',
+            userSounds: '++id, name, icon, isFavorite, type, youtubeId', // type: 'upload' or 'youtube'
             tips: '++id, &content',
-            settings: 'key, value'
+            settings: 'key, value' // For storing theme, language, stats, etc.
         });
     },
 
+    /**
+     * Initializes core UI components like the Swiper sidebar and the custom time picker.
+     */
     initUI: function() {
-        this.swiper = new Swiper('.swiper-container-vertical', { direction: 'vertical', slidesPerView: 1, spaceBetween: 0, allowTouchMove: false });
+        this.swiper = new Swiper('.swiper-container-vertical', { 
+            direction: 'vertical', 
+            slidesPerView: 1, 
+            spaceBetween: 0, 
+            allowTouchMove: false 
+        });
         this.initTimePicker();
         this.updatePomodoroDisplay();
     },
 
+    /**
+     * Sets up all event listeners for the application to handle user interactions.
+     */
     initEventListeners: function() {
-        // Language Switcher
+        // --- Language Switcher ---
         const langButton = document.getElementById('language-switcher-button');
         const langOptions = document.getElementById('language-options');
         langButton.addEventListener('click', () => langOptions.classList.toggle('hidden'));
-        document.addEventListener('click', (e) => !langButton.contains(e.target) && !langOptions.contains(e.target) && langOptions.classList.add('hidden'));
+        document.addEventListener('click', (e) => {
+            // Close language options if clicked outside
+            if (!langButton.contains(e.target) && !langOptions.contains(e.target)) {
+                langOptions.classList.add('hidden');
+            }
+        });
         document.querySelectorAll('.lang-option').forEach(option => option.addEventListener('click', (e) => {
             e.preventDefault();
             this.setLanguage(e.target.dataset.lang);
             langOptions.classList.add('hidden');
         }));
 
-        // Other Listeners
+        // --- Main UI Interactions ---
         document.getElementById('mobile-menu-button').addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('show'));
         document.getElementById('open-sidebar-cta').addEventListener('click', () => document.body.classList.add('sidebar-active'));
         document.addEventListener('click', (e) => {
             const sidebar = document.querySelector('.sidebar-container');
+            // Close sidebar if clicked outside
             if (document.body.classList.contains('sidebar-active') && !sidebar.contains(e.target) && !document.getElementById('open-sidebar-cta').contains(e.target)) {
                 document.body.classList.remove('sidebar-active');
             }
+            // Close sound options menu if clicked outside
             if (!e.target.closest('.sound-options-btn')) {
                 document.querySelectorAll('.sound-options-menu').forEach(menu => menu.style.display = 'none');
             }
         });
-        document.getElementById('theme-selector').addEventListener('click', (e) => e.target.closest('.theme-card') && this.handleThemeSelection(e.target.closest('.theme-card').dataset.theme));
+        document.getElementById('theme-selector').addEventListener('click', (e) => {
+            const themeCard = e.target.closest('.theme-card');
+            if (themeCard) this.handleThemeSelection(themeCard.dataset.theme);
+        });
+        
+        // --- Forms ---
         document.getElementById('alarm-form').addEventListener('submit', (e) => this.handleAlarmFormSubmit(e));
         document.getElementById('contact-form').addEventListener('submit', (e) => this.handleContactFormSubmit(e));
-        document.getElementById('alarm-list').addEventListener('click', (e) => e.target.closest('.delete-alarm-btn') && this.deleteAlarm(parseInt(e.target.closest('.delete-alarm-btn').dataset.id)));
-        document.getElementById('sound-upload-main').addEventListener('change', (e) => this.handleSoundUpload(e, true));
-        document.getElementById('sound-list').addEventListener('click', (e) => e.target.closest('.delete-sound-btn') && this.deleteUserSound(parseInt(e.target.closest('.delete-sound-btn').dataset.id)));
-        document.getElementById('dismiss-alarm-btn').addEventListener('click', () => {
-            document.getElementById('alarm-fired-modal').classList.add('hidden');
-            document.getElementById('alarm-audio-player').pause();
+        document.getElementById('ai-form').addEventListener('submit', (e) => this.handleAIChat(e));
+        document.getElementById('youtube-link-form').addEventListener('submit', (e) => this.saveYouTubeLink(e));
+
+        // --- Lists & Grids ---
+        document.getElementById('alarm-list').addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-alarm-btn');
+            if(deleteBtn) this.deleteAlarm(parseInt(deleteBtn.dataset.id));
         });
+        document.getElementById('sound-list').addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-sound-btn');
+            if(deleteBtn) this.deleteUserSound(parseInt(deleteBtn.dataset.id));
+        });
+        document.getElementById('ambient-sounds-grid').addEventListener('click', (e) => this.handleAmbientGridClick(e));
+        
+        // --- Sidebar & Modals ---
         document.querySelectorAll('.tab-nav-button').forEach(button => button.addEventListener('click', () => this.swiper.slideTo(parseInt(button.dataset.slide), 300)));
         this.swiper.on('slideChange', () => {
             document.querySelectorAll('.tab-nav-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.tab-nav-button[data-slide="${this.swiper.activeIndex}"]`).classList.add('active');
         });
-        document.getElementById('ambient-sounds-grid').addEventListener('click', (e) => {
-            const card = e.target.closest('.sound-card');
-            const optionsBtn = e.target.closest('.sound-options-btn');
-            const menu = e.target.closest('.sound-options-menu');
-            if (optionsBtn) { e.stopPropagation(); this.toggleSoundOptionsMenu(optionsBtn); return; }
-            if (menu) { e.stopPropagation(); this.handleSoundMenuAction(e.target); return; }
-            if (card) card.id === 'add-sound-card' ? this.handleSoundUpload() : this.toggleAmbientSound(card.dataset.soundKey);
+        document.getElementById('dismiss-alarm-btn').addEventListener('click', () => {
+            document.getElementById('alarm-fired-modal').classList.add('hidden');
+            document.getElementById('alarm-audio-player').pause();
+            if (this.ytPlayer && this.ytPlayer.stopVideo) this.ytPlayer.stopVideo();
+            document.getElementById('youtube-player-wrapper').classList.add('hidden');
         });
-        document.getElementById('player-play-pause-btn').addEventListener('click', () => this.toggleAmbientSoundPlayback());
-        document.getElementById('player-volume-slider').addEventListener('input', (e) => document.getElementById('ambient-player').volume = e.target.value);
-        document.getElementById('player-close-btn').addEventListener('click', () => this.hideAudioPlayer());
+        document.querySelectorAll('[data-modal-close]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById(btn.dataset.modalClose).classList.add('hidden');
+            });
+        });
+        document.getElementById('open-add-sound-choice-modal').addEventListener('click', () => document.getElementById('add-sound-choice-modal').classList.remove('hidden'));
+        document.getElementById('add-sound-upload-btn').addEventListener('click', () => this.handleSoundUpload());
+        document.getElementById('add-sound-youtube-btn').addEventListener('click', () => {
+            document.getElementById('add-sound-choice-modal').classList.add('hidden');
+            document.getElementById('add-youtube-modal').classList.remove('hidden');
+        });
+        
+        // --- Audio Player V2 ---
         const ambientPlayer = document.getElementById('ambient-player');
-        ambientPlayer.onplay = () => this.updatePlayerUI();
-        ambientPlayer.onpause = () => this.updatePlayerUI();
+        ambientPlayer.addEventListener('play', () => this.updatePlayerUI());
+        ambientPlayer.addEventListener('pause', () => this.updatePlayerUI());
+        ambientPlayer.addEventListener('timeupdate', () => this.updateSeekSlider());
+        ambientPlayer.addEventListener('loadedmetadata', () => this.updateSeekSlider());
+        document.getElementById('player-play-pause-btn').addEventListener('click', () => this.toggleAmbientSoundPlayback());
+        document.getElementById('player-volume-slider').addEventListener('input', (e) => ambientPlayer.volume = e.target.value);
+        document.getElementById('player-seek-slider').addEventListener('input', (e) => ambientPlayer.currentTime = e.target.value);
+        document.getElementById('player-close-btn').addEventListener('click', () => this.hideAudioPlayer());
+
+        // --- Pomodoro ---
         document.querySelectorAll('.pomodoro-mode-btn').forEach(btn => btn.addEventListener('click', () => this.switchPomodoroMode(btn.dataset.mode)));
         document.getElementById('pomodoro-control-btn').addEventListener('click', () => this.pomodoroInterval ? this.pausePomodoro() : this.startPomodoro());
         document.getElementById('pomodoro-reset-btn').addEventListener('click', () => this.switchPomodoroMode(this.pomodoroMode));
+        
+        // --- Edit/Restore Sounds Modals ---
         document.getElementById('edit-sound-form').addEventListener('submit', (e) => this.saveEditedSound(e));
-        document.getElementById('cancel-edit-sound').addEventListener('click', () => this.closeEditSoundModal());
         document.getElementById('restore-sounds-btn').addEventListener('click', () => this.openRestoreSoundsModal());
-        document.getElementById('close-restore-modal-btn').addEventListener('click', () => document.getElementById('restore-sounds-modal').classList.add('hidden'));
-        document.getElementById('hidden-sounds-list').addEventListener('click', (e) => e.target.closest('.unhide-sound-btn') && this.unhideDefaultSound(e.target.closest('.unhide-sound-btn').dataset.soundKey));
-        document.getElementById('ai-form').addEventListener('submit', (e) => this.handleAIChat(e));
+        document.getElementById('hidden-sounds-list').addEventListener('click', (e) => {
+            const unhideBtn = e.target.closest('.unhide-sound-btn');
+            if(unhideBtn) this.unhideDefaultSound(unhideBtn.dataset.soundKey);
+        });
+
+        // --- YouTube Player ---
+        document.getElementById('close-youtube-player').addEventListener('click', () => {
+             document.getElementById('youtube-player-wrapper').classList.add('hidden');
+             if(this.ytPlayer && this.ytPlayer.stopVideo) this.ytPlayer.stopVideo();
+        });
     },
 
+    /**
+     * Initializes the Web Worker for handling alarms in the background.
+     * This ensures alarms fire accurately even if the browser tab is inactive.
+     */
     initWorker: function() {
-        const workerCode = `let timeouts = {}; self.onmessage = function(e) { const { type, alarm } = e.data; if (type === 'SET_ALARM') { if (alarm.time - Date.now() > 0) { timeouts[alarm.id] = setTimeout(() => { self.postMessage({ type: 'ALARM_FIRED', alarm: alarm }); delete timeouts[alarm.id]; }, alarm.time - Date.now()); } } else if (type === 'CANCEL_ALARM') { if (timeouts[alarm.id]) { clearTimeout(timeouts[alarm.id]); delete timeouts[alarm.id]; } } };`;
-        this.alarmWorker = new Worker(URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' })));
+        const workerCode = `
+            let timeouts = {}; 
+            self.onmessage = function(e) { 
+                const { type, alarm } = e.data; 
+                if (type === 'SET_ALARM') { 
+                    // Set a timeout for the future alarm time
+                    if (alarm.time - Date.now() > 0) { 
+                        timeouts[alarm.id] = setTimeout(() => { 
+                            self.postMessage({ type: 'ALARM_FIRED', alarm: alarm }); 
+                            delete timeouts[alarm.id]; 
+                        }, alarm.time - Date.now()); 
+                    } 
+                } else if (type === 'CANCEL_ALARM') { 
+                    // Clear a specific timeout if an alarm is deleted
+                    if (timeouts[alarm.id]) { 
+                        clearTimeout(timeouts[alarm.id]); 
+                        delete timeouts[alarm.id]; 
+                    } 
+                } 
+            };`;
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        this.alarmWorker = new Worker(URL.createObjectURL(blob));
         this.alarmWorker.onmessage = (e) => {
             if (e.data.type === 'ALARM_FIRED') {
                 this.triggerWakeUpAlarm(e.data.alarm.id);
@@ -152,6 +284,9 @@ const CozyWebApp = {
         };
     },
 
+    /**
+     * Loads saved settings (theme, language) from the database on startup.
+     */
     loadSavedData: async function() {
         await this.db.open();
         const [savedMode, savedTheme, savedLang] = await Promise.all([
@@ -161,14 +296,17 @@ const CozyWebApp = {
         ]);
         this.themeMode = savedMode?.value || 'auto';
         this.lastManualTheme = savedTheme?.value || 'theme-default';
-        const langToSet = savedLang?.value || navigator.language.split('-')[0] || 'vi';
-        this.setLanguage(translations[langToSet] ? langToSet : 'vi');
+        const browserLang = navigator.language.split('-')[0];
+        const langToSet = savedLang?.value || (translations[browserLang] ? browserLang : 'vi');
+        this.setLanguage(langToSet);
         this.applyThemeBasedOnMode();
     },
 
+    // --- AI Assistant Functions ---
+
     handleAIChat: async function(e) {
         e.preventDefault();
-        if (!this.geminiAPIKey || this.geminiAPIKey === 'YOUR_API_KEY_HERE') {
+        if (!this.geminiAPIKey || this.geminiAPIKey === 'YOUR_GEMINI_API_KEY') {
             this.addMessageToChat(this.getText('ai_key_error'), 'ai');
             return;
         }
@@ -185,11 +323,11 @@ const CozyWebApp = {
         document.getElementById('ai-loading').classList.remove('hidden');
 
         try {
-            const response = await this.callAIAssistant(userInput);
-            this.handleAIResponse(response);
+            const responseText = await this.callAIAssistant(userInput);
+            this.handleAIResponse(responseText);
         } catch (error) {
             console.error("AI Assistant Error:", error);
-            this.addMessageToChat(this.getText('ai_error'), 'ai');
+            this.addMessageToChat(this.getText('ai_error_generic') || 'An error occurred.', 'ai');
         } finally {
             input.disabled = false;
             sendBtn.disabled = false;
@@ -197,7 +335,7 @@ const CozyWebApp = {
             input.focus();
         }
     },
-
+    
     addMessageToChat: function(message, sender) {
         const chatBox = document.getElementById('ai-chat-box');
         const messageDiv = document.createElement('div');
@@ -206,31 +344,16 @@ const CozyWebApp = {
         chatBox.appendChild(messageDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
     },
-
+    
     callAIAssistant: async function(userInput) {
-        // Quay trở lại gọi trực tiếp API của Google
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.geminiAPIKey}`;
-        
-        const now = new Date();
-        const locale = this.currentLanguage === 'ja' ? 'ja-JP' : this.currentLanguage === 'en' ? 'en-US' : 'vi-VN';
-        const currentTimeString = now.toLocaleString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowDateString = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
         const langMap = { vi: 'Vietnamese', en: 'English', ja: 'Japanese' };
 
-        const systemPrompt = `You are Cozy AI, a master of sleep science. The current date/time is ${currentTimeString}. Your tasks: 1. Analyze user text to set sleep alarms. 2. Share practical tips. Rules: - ALWAYS respond in ${langMap[this.currentLanguage]}. - Always determine the absolute date (YYYY-MM-DD) from relative terms. - If intent is 'schedule', 'schedule_details' MUST contain at least one valid object. Example: If user says "đặt báo thức 10h tối mai", you must use ${tomorrowDateString} for the date. Your response MUST be valid JSON following the schema, with no extra text.`;
+        const systemPrompt = `You are Cozy AI, a warm, empathetic expert on sleep and relaxation. Respond ONLY in ${langMap[this.currentLanguage]}. Your role is to provide science-based advice and calming guidance. Politely decline any requests to set alarms or perform actions, explaining your purpose is to offer knowledge. Keep your tone friendly and use simple formatting.`;
 
         const payload = {
             contents: [{ parts: [{ text: userInput }] }],
             systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: "OBJECT",
-                    properties: { "intent": { "type": "STRING", "enum": ["schedule", "provide_tip", "general"] }, "response_text": { "type": "STRING", "description": `Your friendly response in ${langMap[this.currentLanguage]}.` }, "schedule_details": { "type": "ARRAY", "items": { "type": "OBJECT", "properties": { "type": { "type": "STRING", "enum": ["normal", "exception"] }, "time": { "type": "STRING" }, "date": { "type": "STRING" }, "sound_request": { "type": "STRING" } }, "required": ["type", "time", "date"] } }, "tips": { "type": "ARRAY", "items": { "type": "STRING" } } }, "required": ["intent", "response_text"]
-                }
-            }
         };
 
         const response = await fetch(apiUrl, { 
@@ -238,62 +361,23 @@ const CozyWebApp = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload) 
         });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Google API request failed: ${errorText}`);
-        }
+
+        if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+        
         const result = await response.json();
-        return JSON.parse(result.candidates[0].content.parts[0].text);
+        return result.candidates?.[0]?.content?.parts?.[0]?.text || "";
     },
 
-    handleAIResponse: function(aiData) {
-        if (!aiData || !aiData.response_text) { this.addMessageToChat(this.getText('ai_understanding_error'), 'ai'); return; }
-        this.addMessageToChat(aiData.response_text, 'ai');
-        if (aiData.tips?.length) this.addAITipsToLibrary(aiData.tips);
-        if (aiData.intent === 'schedule' && aiData.schedule_details?.length) {
-            this.processAISchedule(aiData.schedule_details);
-            this.swiper.slideTo(1, 500);
+    handleAIResponse: function(responseText) {
+        if (!responseText) { 
+            this.addMessageToChat(this.getText('ai_understanding_error'), 'ai'); 
+            return; 
         }
+        this.addMessageToChat(responseText, 'ai');
     },
-
-    addAITipsToLibrary: async function(tips) {
-        if (!tips || tips.length === 0) return;
-        const existingTips = (await this.db.tips.toArray()).map(t => t.content);
-        const newTips = tips.filter(tip => !existingTips.includes(tip));
-        if (newTips.length > 0) {
-            await this.db.tips.bulkAdd(newTips.map(content => ({ content })));
-            this.renderTipsList();
-        }
-    },
-
-    processAISchedule: async function(details) {
-        await this.db.alarms.where({ managedByAI: true }).delete();
-        for (const item of details) {
-            if (!item.time || !item.date) continue;
-            const soundId = await this.findBestSoundId(item.sound_request);
-            const [hours, minutes] = item.time.split(':').map(Number);
-            const [year, month, day] = item.date.split('-').map(Number);
-            const alarmDate = new Date(year, month - 1, day, hours, minutes, 0);
-            if (alarmDate.getTime() < Date.now()) continue;
-            const alarm = { time: alarmDate.getTime(), label: `${this.getText('alarm_list_ai_managed')}`, soundId, isRepeating: item.type === 'normal', managedByAI: true };
-            const id = await this.db.alarms.add(alarm);
-            this.alarmWorker.postMessage({ type: 'SET_ALARM', alarm: { ...alarm, id } });
-        }
-        this.renderAlarmList();
-    },
-
-    findBestSoundId: async function(soundRequest) {
-        if (!soundRequest || soundRequest === 'any') return 'default_alarm';
-        for (const key in this.ambientSoundFiles) {
-            if (this.getText(this.ambientSoundFiles[key].name_key).toLowerCase() === soundRequest.toLowerCase()) {
-                return this.ambientSoundFiles[key].url;
-            }
-        }
-        const favoriteSounds = await this.db.userSounds.where({ isFavorite: true }).toArray();
-        if (favoriteSounds.length > 0) return favoriteSounds[0].id.toString();
-        return 'default_alarm';
-    },
-
+    
+    // --- Custom Time Picker Functions ---
+    
     initTimePicker: function() {
         const timeInput = document.getElementById("custom-time-input");
         const popover = document.getElementById("time-picker-popover");
@@ -309,7 +393,7 @@ const CozyWebApp = {
             }
         });
         document.addEventListener('mousedown', (e) => {
-            if (!timeInput.contains(e.target) && !popover.contains(e.target)) {
+            if (!popover.classList.contains('hidden') && !timeInput.contains(e.target) && !popover.contains(e.target)) {
                 this.closeTimePicker();
             }
         });
@@ -371,6 +455,7 @@ const CozyWebApp = {
         document.getElementById('alarm-time-value').value = `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
     },
 
+    // --- Form Handling ---
     handleAlarmFormSubmit: async function(e) {
         e.preventDefault();
         const form = e.target;
@@ -378,9 +463,15 @@ const CozyWebApp = {
         const originalBtnText = saveBtn.textContent;
         const date = document.querySelector('duet-date-picker').value;
         const time = form.querySelector('#alarm-time-value').value;
-        if (!date || !time) { alert(this.getText('alarm_form_error_datetime')); return; }
+        if (!date || !time) {
+            alert(this.getText('alarm_form_error_datetime'));
+            return;
+        }
         const alarmTime = new Date(`${date}T${time}`).getTime();
-        if (alarmTime <= Date.now()) { alert(this.getText('alarm_form_error_future')); return; }
+        if (alarmTime <= Date.now()) {
+            alert(this.getText('alarm_form_error_future'));
+            return;
+        }
         
         const alarm = {
             time: alarmTime,
@@ -399,15 +490,21 @@ const CozyWebApp = {
         
         saveBtn.innerHTML = `<i class="fas fa-check"></i> ${this.getText('alarm_form_saved')}`;
         setTimeout(() => { saveBtn.textContent = originalBtnText; }, 2000);
-        this.swiper.slideTo(1, 300);
+        this.swiper.slideTo(1, 300); // Switch to the schedule tab
     },
 
     handleContactFormSubmit: function(e) {
         e.preventDefault();
-        alert(this.getText('contact_title'));
+        const name = e.target.name.value;
+        const email = e.target.email.value;
+        const message = e.target.message.value;
+        const subject = encodeURIComponent(`Message from ${name} via The Cozy Web`);
+        const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+        window.location.href = `mailto:csebacksqace@gmail.com?subject=${subject}&body=${body}`;
         e.target.reset();
     },
 
+    // --- Dynamic Background & UI Effects ---
     createStars: function() {
         if (document.querySelector('.star')) return;
         const bg = document.getElementById('dynamic-bg');
@@ -425,8 +522,8 @@ const CozyWebApp = {
     createShootingStar: function() {
         const star = document.createElement('div');
         star.className = 'shooting-star';
-        star.style.top = (Math.random() * window.innerHeight) + 'px';
-        star.style.left = (Math.random() * window.innerWidth) + 'px';
+        star.style.top = `${Math.random() * 80}%`;
+        star.style.left = `${Math.random() * 100}%`;
         document.getElementById('dynamic-bg').appendChild(star);
         setTimeout(() => star.remove(), 2000);
     },
@@ -451,55 +548,50 @@ const CozyWebApp = {
 
     updateMoonPhase: function() {
         const now = new Date();
-        let year = now.getFullYear();
-        let month = now.getMonth() + 1;
-        const day = now.getDate();
-        let c, e, jd;
-        if (month < 3) { year--; month += 12; }
-        ++month;
-        c = 365.25 * year;
-        e = 30.6 * month;
-        jd = c + e + day - 694039.09;
-        jd /= 29.5305882;
-        jd -= parseInt(jd);
-        const phase = Math.round(jd * 8) % 8;
+        const year = now.getFullYear(), month = now.getMonth() + 1, day = now.getDate();
+        let c = 0, e = 0, jd = 0, b = 0;
+        if (month < 3) { c = year - 1; e = month + 12; } else { c = year; e = month; }
+        jd = Math.floor(365.25 * c) + Math.floor(30.6 * (e + 1)) + day + 1720994.5;
+        b = (jd - 2451550.1) / 29.530588853;
+        b = b - Math.floor(b);
         let transform = '';
-        if (phase === 0) transform = 'translateX(0%)';      // New Moon
-        else if (phase === 1) transform = 'translateX(-75%)'; // Waxing Crescent
-        else if (phase === 2) transform = 'translateX(-50%)'; // First Quarter
-        else if (phase === 3) transform = 'translateX(-25%)'; // Waxing Gibbous
-        else if (phase === 4) transform = 'translateX(-100%)';// Full Moon
-        else if (phase === 5) transform = 'translateX(25%)';  // Waning Gibbous
-        else if (phase === 6) transform = 'translateX(50%)';  // Last Quarter
-        else if (phase === 7) transform = 'translateX(75%)';  // Waning Crescent
+        if (b < 0.125) transform = 'translateX(0%)';       // New Moon
+        else if (b < 0.25) transform = 'translateX(-75%)'; // Waxing Crescent
+        else if (b < 0.375) transform = 'translateX(-50%)'; // First Quarter
+        else if (b < 0.5) transform = 'translateX(-25%)';  // Waxing Gibbous
+        else if (b < 0.625) transform = 'translateX(-100%)';// Full Moon
+        else if (b < 0.75) transform = 'translateX(25%)';  // Waning Gibbous
+        else if (b < 0.875) transform = 'translateX(50%)';  // Last Quarter
+        else transform = 'translateX(75%)';               // Waning Crescent
         document.querySelector('.moon-phase-overlay').style.transform = transform;
     },
 
+    // --- Pomodoro Functions ---
     updatePomodoroDisplay: function() {
         const minutes = String(Math.floor(this.pomodoroRemainingTime / 60)).padStart(2, '0');
         const seconds = String(this.pomodoroRemainingTime % 60).padStart(2, '0');
         document.getElementById('pomodoro-timer').textContent = `${minutes}:${seconds}`;
-        const controlBtnText = this.pomodoroInterval ? this.getText('pomodoro_pause_btn') : this.getText('pomodoro_start_btn');
-        document.getElementById('pomodoro-control-btn').textContent = controlBtnText;
+        const controlBtn = document.getElementById('pomodoro-control-btn');
+        controlBtn.textContent = this.pomodoroInterval ? this.getText('pomodoro_pause_btn') : this.getText('pomodoro_start_btn');
     },
 
     switchPomodoroMode: function(mode) {
+        this.pausePomodoro();
         this.pomodoroMode = mode;
         this.pomodoroRemainingTime = this.pomodoro[mode] * 60;
-        document.querySelectorAll('.pomodoro-mode-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
+        document.querySelectorAll('.pomodoro-mode-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
         this.updatePomodoroDisplay();
-        this.pausePomodoro();
     },
 
     startPomodoro: function() {
+        if(this.pomodoroInterval) return;
         this.updatePomodoroDisplay();
         this.pomodoroInterval = setInterval(() => {
             this.pomodoroRemainingTime--;
             this.updatePomodoroDisplay();
             if (this.pomodoroRemainingTime <= 0) {
                 clearInterval(this.pomodoroInterval);
+                this.pomodoroInterval = null;
                 document.getElementById('pomodoro-complete-sound').play().catch(console.error);
                 if (this.pomodoroMode === 'pomodoro') {
                     this.pomodoro.sessions++;
@@ -516,7 +608,8 @@ const CozyWebApp = {
         this.pomodoroInterval = null;
         this.updatePomodoroDisplay();
     },
-
+    
+    // --- Alarm Management ---
     deleteAlarm: async function(id) {
         this.alarmWorker.postMessage({ type: 'CANCEL_ALARM', alarm: { id } });
         await this.db.alarms.delete(id);
@@ -528,32 +621,33 @@ const CozyWebApp = {
         if (!alarm) return;
 
         const player = document.getElementById('alarm-audio-player');
+        
+        const soundId = alarm.soundId;
         const defaultSound = 'https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-bleep-991.mp3';
         
-        if (alarm.soundId && alarm.soundId.startsWith('http')) {
-            player.src = alarm.soundId;
-        } else {
-            try {
-                const userSound = await this.db.userSounds.get(parseInt(alarm.soundId));
-                player.src = userSound?.data instanceof Blob ? URL.createObjectURL(userSound.data) : defaultSound;
-            } catch { player.src = defaultSound; }
+        try {
+            if (soundId.startsWith('default-')) {
+                 player.src = this.ambientSoundFiles[soundId.replace('default-', '')].url;
+            } else {
+                 const userSound = await this.db.userSounds.get(parseInt(soundId.replace('user-', '')));
+                 if(userSound.type === 'upload') {
+                     player.src = URL.createObjectURL(userSound.data);
+                 } else if (userSound.type === 'youtube') {
+                    document.getElementById('youtube-player-wrapper').classList.remove('hidden');
+                    this.ytPlayer.loadVideoById(userSound.youtubeId);
+                    this.ytPlayer.playVideo();
+                    player.src = ''; // Ensure native player is silent
+                 }
+            }
+        } catch {
+             player.src = defaultSound;
         }
-        player.play().catch(console.error);
+
+        if(player.src) player.play().catch(console.error);
 
         document.getElementById('fired-alarm-label').textContent = alarm.label || this.getText('alarm_fired_subtitle');
-        
-        const defaultTips = [ "Tạo một lịch trình ngủ đều đặn.", "Đảm bảo phòng ngủ tối, yên tĩnh và mát mẻ.", "Tránh thiết bị điện tử 30 phút trước khi ngủ.", "Tránh caffeine và rượu bia trước khi ngủ.", "Tập thể dục thường xuyên." ];
-        const dbTips = await this.db.tips.toArray();
-        let tipToShow = dbTips.length > 0 ? dbTips[Math.floor(Math.random() * dbTips.length)].content : this.getText('ai_welcome_message');
-        const availableTips = defaultTips.filter(t => !dbTips.some(dt => dt.content === t));
-
-        if(availableTips.length > 0) {
-            tipToShow = availableTips[Math.floor(Math.random() * availableTips.length)];
-            await this.db.tips.add({content: tipToShow});
-            this.renderTipsList();
-        }
-        
-        document.getElementById('tip-content').textContent = tipToShow;
+        const tips = await this.db.tips.toArray();
+        document.getElementById('tip-content').textContent = tips.length > 0 ? tips[Math.floor(Math.random() * tips.length)].content : this.getText('ai_welcome_message');
         document.getElementById('alarm-fired-modal').classList.remove('hidden');
 
         if (alarm.isRepeating) {
@@ -572,6 +666,7 @@ const CozyWebApp = {
         this.alarmWorker.postMessage({ type: 'SET_ALARM', alarm: newAlarm });
     },
 
+    // --- Rendering Functions ---
     renderAlarmList: async function() {
         const alarms = await this.db.alarms.orderBy("time").toArray();
         const listEl = document.getElementById("alarm-list");
@@ -583,50 +678,16 @@ const CozyWebApp = {
         listEl.innerHTML = alarms.map(alarm => {
             const date = new Date(alarm.time);
             const repeatIcon = alarm.isRepeating ? `<span class="ml-2" title="${this.getText('alarm_list_repeats')}"><i class="fas fa-sync-alt h-4 w-4 inline text-cyan-300"></i></span>` : '';
-            const aiIcon = alarm.managedByAI ? `<span class="ml-2 text-purple-400 text-xs" title="${this.getText('alarm_list_ai_managed')}"><i class="fas fa-robot"></i></span>` : '';
             return `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
-                        <div class="flex-grow">
-                            <div class="flex items-center">
-                                <p class="font-bold truncate">${alarm.label || this.getText('alarm_list_default_label')}${repeatIcon}${aiIcon}</p>
-                            </div>
+                        <div>
+                            <p class="font-bold truncate">${alarm.label || this.getText('alarm_list_default_label')}${repeatIcon}</p>
                             <p class="text-sm text-gray-400">${date.toLocaleDateString(locale)} - ${date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</p>
                         </div>
-                        <button data-id="${alarm.id}" class="delete-alarm-btn text-red-400 hover:text-red-500 font-bold p-2 flex-shrink-0">${this.getText('alarm_list_delete')}</button>
+                        <button data-id="${alarm.id}" class="delete-alarm-btn text-red-400 hover:text-red-500 font-bold p-2">${this.getText('alarm_list_delete')}</button>
                     </div>`;
         }).join('');
     },
     
-    renderSoundList: async function() {
-        const userSounds = await this.db.userSounds.toArray();
-        const listEl = document.getElementById('sound-list');
-        listEl.innerHTML = userSounds.length === 0 ? `<p class="text-gray-400 text-center">${this.getText('sound_list_empty')}</p>` :
-            userSounds.map(s => `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
-                                    <p class="truncate w-48">${s.name}</p>
-                                    <button data-id="${s.id}" class="delete-sound-btn text-red-400 hover:text-red-500 font-bold text-xs">${this.getText('alarm_list_delete')}</button>
-                                 </div>`).join('');
-        
-        let options = '';
-        const favorites = userSounds.filter(s => s.isFavorite);
-        const nonFavorites = userSounds.filter(s => !s.isFavorite);
-
-        if (favorites.length > 0) {
-            options += `<optgroup label="⭐ ${this.getText('sound_option_favorite')}">`;
-            options += favorites.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            options += `</optgroup>`;
-        }
-        if (nonFavorites.length > 0) {
-            options += `<optgroup label="${this.getText('sidebar_sounds_title')}">`;
-            options += nonFavorites.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            options += `</optgroup>`;
-        }
-        options += `<optgroup label="Default Sounds">`;
-        for (const [key, sound] of Object.entries(this.ambientSoundFiles)) {
-            options += `<option value="${sound.url}">${this.getText(sound.name_key)}</option>`;
-        }
-        options += `</optgroup>`;
-        document.getElementById('alarm-sound').innerHTML = options;
-    },
-
     renderTipsList: async function() {
         const tips = await this.db.tips.toArray();
         const listEl = document.getElementById('tips-list');
@@ -634,6 +695,63 @@ const CozyWebApp = {
             tips.map(tip => `<div class="bg-gray-700/50 p-3 rounded-lg">${tip.content}</div>`).join('');
     },
 
+    renderSoundList: async function() {
+        const userSounds = await this.db.userSounds.toArray();
+        const listEl = document.getElementById('sound-list');
+        listEl.innerHTML = userSounds.length === 0 ? `<p class="text-gray-400 text-center">${this.getText('sound_list_empty')}</p>` :
+            userSounds.map(s => {
+                const icon = s.type === 'youtube' ? 'fab fa-youtube' : (s.icon || 'fas fa-music');
+                return `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                            <span class="truncate w-48 flex items-center"><i class="${icon} fa-fw mr-2"></i>${s.name}</span>
+                            <button data-id="${s.id}" class="delete-sound-btn text-red-400 hover:text-red-500 font-bold text-xs">${this.getText('alarm_list_delete')}</button>
+                        </div>`;
+            }).join('');
+        
+        let options = '';
+        const favorites = userSounds.filter(s => s.isFavorite);
+        const nonFavorites = userSounds.filter(s => !s.isFavorite);
+
+        if (favorites.length > 0) {
+            options += `<optgroup label="⭐ ${this.getText('sound_option_favorite')}">`;
+            options += favorites.map(s => `<option value="user-${s.id}">${s.name}</option>`).join('');
+            options += `</optgroup>`;
+        }
+        if (nonFavorites.length > 0) {
+            options += `<optgroup label="${this.getText('sidebar_sounds_title')}">`;
+            options += nonFavorites.map(s => `<option value="user-${s.id}">${s.name}</option>`).join('');
+            options += `</optgroup>`;
+        }
+        options += `<optgroup label="Default Sounds">`;
+        for (const [key, sound] of Object.entries(this.ambientSoundFiles)) {
+            options += `<option value="default-${key}">${this.getText(sound.name_key)}</option>`;
+        }
+        options += `</optgroup>`;
+        document.getElementById('alarm-sound').innerHTML = options;
+    },
+
+    handleAmbientGridClick: function(e) {
+        const card = e.target.closest('.sound-card');
+        const optionsBtn = e.target.closest('.sound-options-btn');
+        const menu = e.target.closest('.sound-options-menu');
+        if (optionsBtn) { 
+            e.stopPropagation(); 
+            this.toggleSoundOptionsMenu(optionsBtn); 
+            return; 
+        }
+        if (menu) { 
+            e.stopPropagation(); 
+            this.handleSoundMenuAction(e.target); 
+            return; 
+        }
+        if (card) {
+            if (card.id === 'add-sound-card') {
+                document.getElementById('add-sound-choice-modal').classList.remove('hidden');
+            } else {
+                this.toggleAmbientSound(card.dataset.soundKey);
+            }
+        }
+    },
+    
     renderAmbientSoundGrid: async function() {
         const gridEl = document.getElementById('ambient-sounds-grid');
         const userSounds = await this.db.userSounds.toArray();
@@ -655,11 +773,11 @@ const CozyWebApp = {
         }
         
         userSounds.forEach(sound => {
-            const isFaIcon = sound.icon.startsWith("fa");
-            const iconHtml = isFaIcon ? `<i class="${sound.icon}"></i>` : `<span>${sound.icon}</span>`;
+            const icon = sound.type === 'youtube' ? 'fab fa-youtube' : (sound.icon || 'fas fa-music');
             const favClass = sound.isFavorite ? "favorited" : "";
-            html += `<div class="sound-card" data-sound-key="user-${sound.id}">
-                        <div class="sound-card-icon">${iconHtml}</div>
+            const isYT = sound.type === 'youtube' ? ' is-youtube' : '';
+            html += `<div class="sound-card${isYT}" data-sound-key="user-${sound.id}">
+                        <div class="sound-card-icon"><i class="${icon}"></i></div>
                         <h4 class="sound-card-name">${sound.name}</h4>
                         <button class="sound-options-btn"><i class="fas fa-ellipsis-v"></i></button>
                         <div class="sound-options-menu" data-id="${sound.id}">
@@ -677,6 +795,7 @@ const CozyWebApp = {
         gridEl.innerHTML = html;
     },
 
+    // --- Stats Tracking ---
     initStats: async function() {
         let stats = await this.db.settings.get('userStats');
         if (!stats) {
@@ -725,7 +844,13 @@ const CozyWebApp = {
         for (const key in soundPlays) {
             if (soundPlays[key] > maxPlays) {
                 maxPlays = soundPlays[key];
-                favSound = key.startsWith('default-') ? this.getText(this.ambientSoundFiles[key.replace('default-', '')]?.name_key) : this.getText('stats_user_sound');
+                if (key.startsWith('default-')) {
+                    const soundInfo = this.ambientSoundFiles[key.replace('default-', '')];
+                    favSound = soundInfo ? this.getText(soundInfo.name_key) : this.getText('stats_user_sound');
+                } else {
+                    const userSound = await this.db.userSounds.get(parseInt(key.replace('user-', '')));
+                    favSound = userSound ? userSound.name : this.getText('stats_user_sound');
+                }
             }
         }
         document.getElementById('personal-favorite-sound').textContent = favSound;
@@ -750,6 +875,7 @@ const CozyWebApp = {
         setInterval(update, 3000);
     },
 
+    // --- Sound Management (CRUD & Modals) ---
     toggleSoundOptionsMenu: function(button) {
         const menu = button.nextElementSibling;
         document.querySelectorAll('.sound-options-menu').forEach(m => {
@@ -818,18 +944,13 @@ const CozyWebApp = {
                             </div>` : '';
         }).join('');
     },
-
+    
     openEditSoundModal: function(sound) {
         this.currentEditingSound = sound;
         document.getElementById('edit-sound-id').value = sound.id;
         document.getElementById('edit-sound-name').value = sound.name;
         document.getElementById('edit-sound-icon').value = sound.icon;
         document.getElementById('edit-sound-modal').classList.remove('hidden');
-    },
-
-    closeEditSoundModal: function() {
-        document.getElementById('edit-sound-modal').classList.add('hidden');
-        this.currentEditingSound = null;
     },
 
     saveEditedSound: async function(e) {
@@ -839,7 +960,7 @@ const CozyWebApp = {
         const icon = document.getElementById('edit-sound-icon').value;
         if (id && name) {
             await this.db.userSounds.update(id, { name, icon });
-            this.closeEditSoundModal();
+            document.getElementById('edit-sound-modal').classList.add('hidden');
             this.renderAmbientSoundGrid();
             this.renderSoundList();
         }
@@ -862,36 +983,61 @@ const CozyWebApp = {
         this.renderSoundList();
     },
 
-    handleSoundUpload: function(event, isFromMainUploader = false) {
-        const input = isFromMainUploader ? event.target : document.createElement('input');
-        const processFile = (file) => {
+    handleSoundUpload: function() {
+        document.getElementById('add-sound-choice-modal').classList.add('hidden');
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'audio/*';
+        input.onchange = async () => {
+            const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     try {
-                        const soundData = { name: file.name.replace(/\.[^/.]+$/, ""), icon: '🎵', isFavorite: false, data: new Blob([e.target.result], { type: file.type }) };
+                        const soundData = { name: file.name.replace(/\.[^/.]+$/, ""), icon: '🎵', isFavorite: false, type: 'upload', data: new Blob([e.target.result], { type: file.type }) };
                         const id = await this.db.userSounds.add(soundData);
                         this.renderAmbientSoundGrid();
                         this.renderSoundList();
-                        if (!isFromMainUploader) {
-                            this.openEditSoundModal({ ...soundData, id });
-                        }
+                        this.openEditSoundModal({ ...soundData, id });
                     } catch (err) { console.error("Error saving sound:", err); }
                 };
                 reader.readAsArrayBuffer(file);
             }
         };
+        input.click();
+    },
+    
+    extractYouTubeID: function(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    },
+    
+    saveYouTubeLink: async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('youtube-url-input');
+        const errorEl = document.getElementById('youtube-error');
+        const url = input.value.trim();
+        const videoID = this.extractYouTubeID(url);
 
-        if (isFromMainUploader) {
-            processFile(event.target.files[0]);
-        } else {
-            input.type = 'file';
-            input.accept = 'audio/*';
-            input.onchange = () => processFile(input.files[0]);
-            input.click();
+        if (!videoID) {
+            errorEl.textContent = this.getText('add_yt_error_invalid');
+            errorEl.classList.remove('hidden');
+            return;
         }
+        errorEl.classList.add('hidden');
+        
+        const soundData = { name: `YouTube - ${videoID}`, icon: 'fab fa-youtube', isFavorite: false, type: 'youtube', youtubeId: videoID };
+        const id = await this.db.userSounds.add(soundData);
+        this.renderAmbientSoundGrid();
+        this.renderSoundList();
+        
+        document.getElementById('add-youtube-modal').classList.add('hidden');
+        input.value = '';
+        this.openEditSoundModal({ ...soundData, id });
     },
 
+    // --- Theme Management ---
     handleThemeSelection: function(selectedTheme) {
         this.themeMode = selectedTheme === 'theme-auto' ? 'auto' : 'manual';
         if (this.themeMode === 'manual') this.lastManualTheme = selectedTheme;
@@ -918,7 +1064,8 @@ const CozyWebApp = {
     applyTheme: function(themeName) {
         this.lastAppliedTheme = themeName;
         document.body.className = '';
-        document.body.classList.add(themeName);
+        document.body.classList.add(themeName, 'loading');
+        
         this.removeCloudElements();
         if (themeName === 'theme-beach' || themeName === 'theme-dawn') this.createCloudElements();
         
@@ -929,6 +1076,7 @@ const CozyWebApp = {
         
         this.updateCelestialBodies();
         this.updateNightEffects();
+        setTimeout(() => document.body.classList.remove('loading'), 10);
     },
 
     updateCelestialBodies: function() {
@@ -990,10 +1138,28 @@ const CozyWebApp = {
         await this.db.settings.put({ key: 'lastManualTheme', value: this.lastManualTheme });
     },
 
+    // --- Audio Player V2 Functions ---
     toggleAmbientSound: async function(soundKey) {
         const player = document.getElementById('ambient-player');
+        
+        if (soundKey.startsWith('user-')) {
+            const soundId = parseInt(soundKey.replace('user-', ''));
+            const sound = await this.db.userSounds.get(soundId);
+            if (sound && sound.type === 'youtube') {
+                this.hideAudioPlayer();
+                document.getElementById('youtube-player-wrapper').classList.remove('hidden');
+                this.ytPlayer.loadVideoById(sound.youtubeId);
+                this.ytPlayer.playVideo();
+                return;
+            }
+        }
+        
+        document.getElementById('youtube-player-wrapper').classList.add('hidden');
+        if(this.ytPlayer && this.ytPlayer.stopVideo) this.ytPlayer.stopVideo();
+
         if (this.activeSoundKey === soundKey && !player.paused) {
-            return this.hideAudioPlayer();
+            this.hideAudioPlayer();
+            return;
         }
         if (player.src.startsWith('blob:')) URL.revokeObjectURL(player.src);
 
@@ -1030,6 +1196,27 @@ const CozyWebApp = {
         }
     },
 
+    formatTime: function(seconds) {
+        if (isNaN(seconds)) return "0:00";
+        const min = Math.floor(seconds / 60);
+        const sec = Math.floor(seconds % 60);
+        return `${min}:${String(sec).padStart(2, '0')}`;
+    },
+
+    updateSeekSlider: function() {
+        const player = document.getElementById('ambient-player');
+        const seekSlider = document.getElementById('player-seek-slider');
+        const currentTimeEl = document.getElementById('player-current-time');
+        const totalTimeEl = document.getElementById('player-total-time');
+
+        if (isNaN(player.duration)) return;
+
+        seekSlider.max = player.duration;
+        seekSlider.value = player.currentTime;
+        currentTimeEl.textContent = this.formatTime(player.currentTime);
+        totalTimeEl.textContent = this.formatTime(player.duration);
+    },
+
     updatePlayerUI: async function() {
         const player = document.getElementById('ambient-player');
         const soundNameEl = document.getElementById('current-sound-name');
@@ -1051,9 +1238,20 @@ const CozyWebApp = {
             }
         } else {
             soundNameEl.textContent = this.getText('player_default_name');
+            document.getElementById('player-current-time').textContent = "0:00";
+            document.getElementById('player-total-time').textContent = "0:00";
+            document.getElementById('player-seek-slider').value = 0;
         }
     }
 };
 
+/**
+ * Global function called by the YouTube IFrame API script when it's ready.
+ */
+function onYouTubeIframeAPIReady() {
+    CozyWebApp.initYTPlayer();
+}
+
+// Start the application once the DOM is fully loaded.
 document.addEventListener('DOMContentLoaded', () => CozyWebApp.init());
 
