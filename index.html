@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.2/dist/dexie.min.js" defer></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@duetds/date-picker@1.4.0/dist/duet/duet.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="style.css">
@@ -123,9 +122,10 @@
                 <h2 class="text-4xl font-bold mb-4" data-i18n-key="community_title">Cộng đồng Chill Cùng Nhau</h2>
                 <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="community_subtitle">Mỗi khoảnh khắc thư giãn của bạn góp phần tạo nên một không gian yên bình chung.</p>
                 <div class="grid md:grid-cols-3 gap-8">
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-users text-5xl text-purple-300"></i></div><h3 id="global-users" class="text-4xl font-bold mb-2">1,234</h3><p class="text-gray-400" data-i18n-key="stats_global_users">Tâm hồn đồng điệu</p></div>
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-headphones-alt text-5xl text-cyan-300"></i></div><h3 id="global-hours" class="text-4xl font-bold mb-2">5,678</h3><p class="text-gray-400" data-i18n-key="stats_global_hours">Giờ đã thư giãn</p></div>
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-mouse-pointer text-5xl text-yellow-300"></i></div><h3 id="global-visits" class="text-4xl font-bold mb-2">9,101</h3><p class="text-gray-400" data-i18n-key="stats_global_visits">Lượt ghé thăm</p></div>
+                    <!-- FIX: Resetting hardcoded stats to 0 -->
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-users text-5xl text-purple-300"></i></div><h3 id="global-users" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_users">Tâm hồn đồng điệu</p></div>
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-headphones-alt text-5xl text-cyan-300"></i></div><h3 id="global-hours" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_hours">Giờ đã thư giãn</p></div>
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-mouse-pointer text-5xl text-yellow-300"></i></div><h3 id="global-visits" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_visits">Lượt ghé thăm</p></div>
                 </div>
             </div>
         </section>
@@ -157,8 +157,16 @@
                     <div class="w-full text-white">
                         <h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_alarm_title">Cài đặt Báo thức</h2>
                         <form id="alarm-form" class="space-y-4">
-                            <div><label class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_date">Chọn ngày</label><duet-date-picker identifier="alarmDate"></duet-date-picker></div>
-                            <div class="relative"><label for="custom-time-input" class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_time">Chọn giờ</label><div id="custom-time-input" class="custom-time-input cursor-pointer flex justify-between items-center"><span id="time-display">--:-- --</span><i class="fas fa-clock text-gray-400"></i></div><input type="hidden" id="alarm-time-value" name="alarm-time"></div>
+                            <!-- START: NATIVE DATE/TIME PICKER -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_date">Chọn ngày</label>
+                                <input type="date" id="alarm-date-input" class="form-input" required>
+                            </div>
+                            <div>
+                                <label for="alarm-time-input" class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_time">Chọn giờ</label>
+                                <input type="time" id="alarm-time-input" class="form-input" required>
+                            </div>
+                            <!-- END: NATIVE DATE/TIME PICKER -->
                             <div><label for="alarm-label" class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_label">Tên báo thức</label><input type="text" id="alarm-label" class="form-input" data-i18n-key-placeholder="alarm_form_label_placeholder"></div>
                             <div><label for="alarm-sound" class="block mb-2 text-sm font-medium" data-i18n-key="alarm_form_sound">Âm thanh</label><select id="alarm-sound" class="form-select"></select></div>
                             <div class="flex items-center justify-between pt-2"><span class="text-sm font-medium" data-i18n-key="alarm_form_repeat">Lặp lại mỗi ngày</span><label class="toggle-switch"><input type="checkbox" id="alarm-repeat"><span class="slider"></span></label></div>
@@ -215,7 +223,6 @@
     <div id="restore-sounds-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-semibold text-white text-center" data-i18n-key="restore_sound_title">Âm thanh đã ẩn</h3><button data-modal-close="restore-sounds-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div id="hidden-sounds-list" class="space-y-3 max-h-64 overflow-y-auto"></div></div></div></div>
     <div id="add-sound-choice-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="add_sound_title">Thêm Âm thanh mới</h3><div class="flex flex-col space-y-4"><button id="add-sound-upload-btn" class="btn-modal-primary"><i class="fas fa-upload mr-2"></i><span data-i18n-key="add_sound_from_file">Tải lên từ thiết bị</span></button><button id="add-sound-youtube-btn" class="btn-modal-secondary"><i class="fab fa-youtube mr-2"></i><span data-i18n-key="add_sound_from_yt">Thêm từ link YouTube</span></button></div></div></div></div>
     <div id="add-youtube-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="add_yt_title">Thêm nhạc từ YouTube</h3><form id="youtube-link-form" class="space-y-4"><label for="youtube-url-input" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="add_yt_input_label">Dán link video YouTube vào đây</label><input type="url" id="youtube-url-input" class="form-input" required data-i18n-key-placeholder="add_yt_placeholder"><div id="youtube-error" class="text-red-400 text-sm mt-2 hidden"></div><div class="flex justify-end space-x-4 pt-4"><button type="button" class="btn-modal-secondary" data-modal-close="add-youtube-modal" data-i18n-key="btn_cancel">Hủy</button><button type="submit" class="btn-modal-primary" data-i18n-key="btn_add">Thêm</button></div></form></div></div></div>
-    <div id="time-picker-popover" class="time-picker-popover absolute rounded-lg p-2 shadow-lg hidden z-50"><div class="flex"><div id="hour-column" class="time-picker-column w-16"></div><div id="minute-column" class="time-picker-column w-16"></div><div id="ampm-column" class="time-picker-column w-16"></div></div></div>
     
     <div id="youtube-player-wrapper" class="fixed-modal bg-black/80 hidden"><div id="youtube-player"></div><button id="close-youtube-player" class="absolute top-4 right-4 text-white text-3xl">&times;</button></div>
 

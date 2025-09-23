@@ -16,7 +16,7 @@ const CozyWebApp = {
     currentEditingSound: null,
     activeSoundKey: null,
     currentLanguage: 'vi',
-    geminiAPIKey: 'YOUR_GEMINI_API_KEY', // IMPORTANT: Replace with your actual Gemini API Key
+    geminiAPIKey: 'GEMINI_API_KEY',
     ytPlayer: null,
 
     // Default ambient sounds library
@@ -42,28 +42,26 @@ const CozyWebApp = {
     init: async function() {
         this.initDatabase();
         this.initUI();
+        this.initDateTimePickers();
         this.initEventListeners();
         this.initWorker();
         await this.loadSavedData();
         this.createStars();
         setInterval(() => this.updateClock(), 1000); // Update clock and check for theme changes
         this.initStats();
-        // Remove loading class after a short delay to allow assets to load smoothly
         setTimeout(() => { document.body.classList.remove('loading'); }, 100);
     },
 
     /**
      * Initializes the YouTube IFrame Player.
-     * This function is a global callback required by the YouTube IFrame Player API.
      */
     initYTPlayer: function() {
         this.ytPlayer = new YT.Player('youtube-player', {
             height: '100%',
             width: '100%',
-            playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'modestbranding': 1 },
+            playerVars: { 'autoplay': 0, 'controls': 0, 'showinfo': 0, 'rel': 0, 'modestbranding': 1 },
             events: {
                 'onStateChange': (event) => {
-                    // When the video ends, hide the player
                     if (event.data === YT.PlayerState.ENDED) {
                         document.getElementById('youtube-player-wrapper').classList.add('hidden');
                     }
@@ -73,33 +71,21 @@ const CozyWebApp = {
     },
 
     // --- Core Systems: I18n, Database, Worker, UI ---
-
-    /**
-     * Retrieves a translated string for a given key based on the current language.
-     * @param {string} key - The translation key from the `translations.js` file.
-     * @returns {string} The translated text, falling back to English or the key itself.
-     */
     getText: function(key) {
         return translations[this.currentLanguage]?.[key] 
             || translations['en']?.[key] 
-            || `[${key}]`; // Fallback
+            || `[${key}]`;
     },
 
-    /**
-     * Sets the application's language, updates all UI text, and saves the setting.
-     * @param {string} lang - The language code (e.g., 'vi', 'en', 'ja').
-     */
     setLanguage: function(lang) {
         if (!translations[lang]) return;
         this.currentLanguage = lang;
         document.documentElement.lang = lang;
 
-        // Update all elements with translation keys
         document.querySelectorAll('[data-i18n-key]').forEach(el => el.textContent = this.getText(el.getAttribute('data-i18n-key')));
         document.querySelectorAll('[data-i18n-key-placeholder]').forEach(el => el.placeholder = this.getText(el.getAttribute('data-i18n-key-placeholder')));
         document.querySelectorAll('[data-i18n-key-title]').forEach(el => el.title = this.getText(el.getAttribute('data-i18n-key-title')));
-
-        // Re-render components that depend on language strings
+        
         this.renderAlarmList();
         this.renderSoundList();
         this.renderAmbientSoundGrid();
@@ -111,23 +97,16 @@ const CozyWebApp = {
         this.db.settings.put({ key: 'language', value: lang });
     },
 
-    /**
-     * Initializes the Dexie.js database for all client-side storage.
-     * Defines tables for alarms, user sounds, tips, and general settings.
-     */
     initDatabase: function() {
         this.db = new Dexie('TheCozyWebDB');
         this.db.version(11).stores({
             alarms: '++id, time',
-            userSounds: '++id, name, icon, isFavorite, type, youtubeId', // type: 'upload' or 'youtube'
+            userSounds: '++id, name, icon, isFavorite, type, youtubeId',
             tips: '++id, &content',
-            settings: 'key, value' // For storing theme, language, stats, etc.
+            settings: 'key, value'
         });
     },
 
-    /**
-     * Initializes core UI components like the Swiper sidebar and the custom time picker.
-     */
     initUI: function() {
         this.swiper = new Swiper('.swiper-container-vertical', { 
             direction: 'vertical', 
@@ -135,20 +114,15 @@ const CozyWebApp = {
             spaceBetween: 0, 
             allowTouchMove: false 
         });
-        this.initTimePicker();
         this.updatePomodoroDisplay();
     },
 
-    /**
-     * Sets up all event listeners for the application to handle user interactions.
-     */
     initEventListeners: function() {
         // --- Language Switcher ---
         const langButton = document.getElementById('language-switcher-button');
         const langOptions = document.getElementById('language-options');
         langButton.addEventListener('click', () => langOptions.classList.toggle('hidden'));
         document.addEventListener('click', (e) => {
-            // Close language options if clicked outside
             if (!langButton.contains(e.target) && !langOptions.contains(e.target)) {
                 langOptions.classList.add('hidden');
             }
@@ -164,11 +138,9 @@ const CozyWebApp = {
         document.getElementById('open-sidebar-cta').addEventListener('click', () => document.body.classList.add('sidebar-active'));
         document.addEventListener('click', (e) => {
             const sidebar = document.querySelector('.sidebar-container');
-            // Close sidebar if clicked outside
-            if (document.body.classList.contains('sidebar-active') && !sidebar.contains(e.target) && !document.getElementById('open-sidebar-cta').contains(e.target)) {
-                document.body.classList.remove('sidebar-active');
+            if (document.body.classList.contains('sidebar-active') && !sidebar.contains(e.target) && !e.target.closest('#open-sidebar-cta')) {
+                 document.body.classList.remove('sidebar-active');
             }
-            // Close sound options menu if clicked outside
             if (!e.target.closest('.sound-options-btn')) {
                 document.querySelectorAll('.sound-options-menu').forEach(menu => menu.style.display = 'none');
             }
@@ -201,12 +173,21 @@ const CozyWebApp = {
             document.querySelectorAll('.tab-nav-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.tab-nav-button[data-slide="${this.swiper.activeIndex}"]`).classList.add('active');
         });
+        
         document.getElementById('dismiss-alarm-btn').addEventListener('click', () => {
             document.getElementById('alarm-fired-modal').classList.add('hidden');
-            document.getElementById('alarm-audio-player').pause();
+            const player = document.getElementById('alarm-audio-player');
+            player.pause();
+            if (player.src && player.src.startsWith('blob:')) {
+                URL.revokeObjectURL(player.src);
+            }
+            player.src = ''; 
+            player.loop = false; 
+
             if (this.ytPlayer && this.ytPlayer.stopVideo) this.ytPlayer.stopVideo();
             document.getElementById('youtube-player-wrapper').classList.add('hidden');
         });
+        
         document.querySelectorAll('[data-modal-close]').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.getElementById(btn.dataset.modalClose).classList.add('hidden');
@@ -250,17 +231,12 @@ const CozyWebApp = {
         });
     },
 
-    /**
-     * Initializes the Web Worker for handling alarms in the background.
-     * This ensures alarms fire accurately even if the browser tab is inactive.
-     */
     initWorker: function() {
         const workerCode = `
             let timeouts = {}; 
             self.onmessage = function(e) { 
                 const { type, alarm } = e.data; 
                 if (type === 'SET_ALARM') { 
-                    // Set a timeout for the future alarm time
                     if (alarm.time - Date.now() > 0) { 
                         timeouts[alarm.id] = setTimeout(() => { 
                             self.postMessage({ type: 'ALARM_FIRED', alarm: alarm }); 
@@ -268,7 +244,6 @@ const CozyWebApp = {
                         }, alarm.time - Date.now()); 
                     } 
                 } else if (type === 'CANCEL_ALARM') { 
-                    // Clear a specific timeout if an alarm is deleted
                     if (timeouts[alarm.id]) { 
                         clearTimeout(timeouts[alarm.id]); 
                         delete timeouts[alarm.id]; 
@@ -284,9 +259,6 @@ const CozyWebApp = {
         };
     },
 
-    /**
-     * Loads saved settings (theme, language) from the database on startup.
-     */
     loadSavedData: async function() {
         await this.db.open();
         const [savedMode, savedTheme, savedLang] = await Promise.all([
@@ -376,98 +348,32 @@ const CozyWebApp = {
         this.addMessageToChat(responseText, 'ai');
     },
     
-    // --- Custom Time Picker Functions ---
-    
-    initTimePicker: function() {
-        const timeInput = document.getElementById("custom-time-input");
-        const popover = document.getElementById("time-picker-popover");
-        if (!timeInput || !popover) return;
-        timeInput.addEventListener('click', () => this.openTimePicker());
-        popover.addEventListener('click', (e) => {
-            if (e.target.classList.contains('time-picker-item')) {
-                const column = e.target.parentElement;
-                column.querySelector('.selected')?.classList.remove('selected');
-                e.target.classList.add('selected');
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                this.updateTimeDisplay();
-            }
-        });
-        document.addEventListener('mousedown', (e) => {
-            if (!popover.classList.contains('hidden') && !timeInput.contains(e.target) && !popover.contains(e.target)) {
-                this.closeTimePicker();
-            }
-        });
-    },
-
-    openTimePicker: function() {
-        const popover = document.getElementById("time-picker-popover");
-        const timeInput = document.getElementById("custom-time-input");
-        const rect = timeInput.getBoundingClientRect();
-        popover.style.top = `${rect.bottom + 5}px`;
-        popover.style.left = `${rect.left}px`;
-        popover.style.width = `${rect.width}px`;
-        this.populateTimePicker();
-        popover.classList.remove('hidden');
-    },
-
-    closeTimePicker: function() {
-        document.getElementById("time-picker-popover")?.classList.add('hidden');
-    },
-
-    populateTimePicker: function() {
-        const hourCol = document.getElementById('hour-column');
-        const minCol = document.getElementById('minute-column');
-        const ampmCol = document.getElementById('ampm-column');
-        let hours = '', minutes = '', ampm = '';
-        for (let i = 1; i <= 12; i++) hours += `<div class="time-picker-item" data-value="${i}">${String(i).padStart(2, '0')}</div>`;
-        for (let i = 0; i < 60; i++) minutes += `<div class="time-picker-item" data-value="${i}">${String(i).padStart(2, '0')}</div>`;
-        ampm = `<div class="time-picker-item" data-value="AM">AM</div><div class="time-picker-item" data-value="PM">PM</div>`;
-        hourCol.innerHTML = hours;
-        minCol.innerHTML = minutes;
-        ampmCol.innerHTML = ampm;
-
+    // --- SIMPLE DATE/TIME HANDLING ---
+    initDateTimePickers: function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('alarm-date-input').min = today;
+        
         const now = new Date();
-        let currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const currentAmPm = currentHour >= 12 ? 'PM' : 'AM';
-        currentHour = currentHour % 12 || 12;
-
-        hourCol.querySelector(`[data-value="${currentHour}"]`)?.classList.add('selected');
-        minCol.querySelector(`[data-value="${currentMinute}"]`)?.classList.add('selected');
-        ampmCol.querySelector(`[data-value="${currentAmPm}"]`)?.classList.add('selected');
-        
-        setTimeout(() => {
-            hourCol.querySelector('.selected')?.scrollIntoView({ block: 'center' });
-            minCol.querySelector('.selected')?.scrollIntoView({ block: 'center' });
-        }, 0);
-        this.updateTimeDisplay();
-    },
-
-    updateTimeDisplay: function() {
-        const hour = document.querySelector('#hour-column .selected')?.dataset.value || '01';
-        const minute = document.querySelector('#minute-column .selected')?.dataset.value || '00';
-        const ampm = document.querySelector('#ampm-column .selected')?.dataset.value || 'AM';
-        document.getElementById('time-display').textContent = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${ampm}`;
-        
-        let hour24 = parseInt(hour, 10);
-        if (ampm === 'PM' && hour24 < 12) hour24 += 12;
-        if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-        document.getElementById('alarm-time-value').value = `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        document.getElementById('alarm-time-input').value = currentTime;
     },
 
     // --- Form Handling ---
     handleAlarmFormSubmit: async function(e) {
         e.preventDefault();
         const form = e.target;
-        const saveBtn = document.getElementById('save-alarm-btn');
-        const originalBtnText = saveBtn.textContent;
-        const date = document.querySelector('duet-date-picker').value;
-        const time = form.querySelector('#alarm-time-value').value;
+        
+        const date = document.getElementById('alarm-date-input').value;
+        const time = document.getElementById('alarm-time-input').value;
+        
         if (!date || !time) {
             alert(this.getText('alarm_form_error_datetime'));
             return;
         }
-        const alarmTime = new Date(`${date}T${time}`).getTime();
+        
+        const alarmDateTime = new Date(`${date}T${time}`);
+        const alarmTime = alarmDateTime.getTime();
+        
         if (alarmTime <= Date.now()) {
             alert(this.getText('alarm_form_error_future'));
             return;
@@ -482,15 +388,18 @@ const CozyWebApp = {
         
         const id = await this.db.alarms.add(alarm);
         this.alarmWorker.postMessage({ type: 'SET_ALARM', alarm: { ...alarm, id } });
+        
         form.reset();
-        document.querySelector('duet-date-picker').value = '';
-        document.getElementById('time-display').textContent = '--:-- --';
-        this.closeTimePicker();
+        this.initDateTimePickers();
+        
         this.renderAlarmList();
         
+        const saveBtn = document.getElementById('save-alarm-btn');
+        const originalText = saveBtn.textContent;
         saveBtn.innerHTML = `<i class="fas fa-check"></i> ${this.getText('alarm_form_saved')}`;
-        setTimeout(() => { saveBtn.textContent = originalBtnText; }, 2000);
-        this.swiper.slideTo(1, 300); // Switch to the schedule tab
+        setTimeout(() => { saveBtn.textContent = originalText; }, 2000);
+        
+        this.swiper.slideTo(1, 300);
     },
 
     handleContactFormSubmit: function(e) {
@@ -555,14 +464,14 @@ const CozyWebApp = {
         b = (jd - 2451550.1) / 29.530588853;
         b = b - Math.floor(b);
         let transform = '';
-        if (b < 0.125) transform = 'translateX(0%)';       // New Moon
-        else if (b < 0.25) transform = 'translateX(-75%)'; // Waxing Crescent
-        else if (b < 0.375) transform = 'translateX(-50%)'; // First Quarter
-        else if (b < 0.5) transform = 'translateX(-25%)';  // Waxing Gibbous
-        else if (b < 0.625) transform = 'translateX(-100%)';// Full Moon
-        else if (b < 0.75) transform = 'translateX(25%)';  // Waning Gibbous
-        else if (b < 0.875) transform = 'translateX(50%)';  // Last Quarter
-        else transform = 'translateX(75%)';               // Waning Crescent
+        if (b < 0.125) transform = 'translateX(0%)';
+        else if (b < 0.25) transform = 'translateX(-75%)';
+        else if (b < 0.375) transform = 'translateX(-50%)';
+        else if (b < 0.5) transform = 'translateX(-25%)';
+        else if (b < 0.625) transform = 'translateX(-100%)';
+        else if (b < 0.75) transform = 'translateX(25%)';
+        else if (b < 0.875) transform = 'translateX(50%)';
+        else transform = 'translateX(75%)';
         document.querySelector('.moon-phase-overlay').style.transform = transform;
     },
 
@@ -621,29 +530,48 @@ const CozyWebApp = {
         if (!alarm) return;
 
         const player = document.getElementById('alarm-audio-player');
-        
+        player.loop = true; 
         const soundId = alarm.soundId;
-        const defaultSound = 'https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-bleep-991.mp3';
-        
-        try {
-            if (soundId.startsWith('default-')) {
-                 player.src = this.ambientSoundFiles[soundId.replace('default-', '')].url;
-            } else {
-                 const userSound = await this.db.userSounds.get(parseInt(soundId.replace('user-', '')));
-                 if(userSound.type === 'upload') {
-                     player.src = URL.createObjectURL(userSound.data);
-                 } else if (userSound.type === 'youtube') {
-                    document.getElementById('youtube-player-wrapper').classList.remove('hidden');
-                    this.ytPlayer.loadVideoById(userSound.youtubeId);
-                    this.ytPlayer.playVideo();
-                    player.src = ''; // Ensure native player is silent
-                 }
-            }
-        } catch {
-             player.src = defaultSound;
-        }
+        const defaultSoundURL = 'https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-bleep-991.mp3';
 
-        if(player.src) player.play().catch(console.error);
+        const playSound = (url) => {
+            if (!url) return;
+            player.src = url;
+            player.load(); 
+            const playPromise = player.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error(`Error playing alarm sound (this is common due to browser autoplay policies): ${error}`);
+                });
+            }
+        };
+
+        try {
+            if (soundId && soundId.startsWith('default-')) {
+                const soundKey = soundId.replace('default-', '');
+                playSound(this.ambientSoundFiles[soundKey]?.url || defaultSoundURL);
+            } else if (soundId && soundId.startsWith('user-')) {
+                const userSound = await this.db.userSounds.get(parseInt(soundId.replace('user-', '')));
+                if (userSound) { 
+                    if (userSound.type === 'upload' && userSound.data) {
+                        playSound(URL.createObjectURL(userSound.data));
+                    } else if (userSound.type === 'youtube' && userSound.youtubeId) {
+                        document.getElementById('youtube-player-wrapper').classList.remove('hidden');
+                        this.ytPlayer.loadVideoById(userSound.youtubeId);
+                        this.ytPlayer.playVideo();
+                    } else {
+                        playSound(defaultSoundURL); 
+                    }
+                } else {
+                    playSound(defaultSoundURL);
+                }
+            } else {
+                playSound(defaultSoundURL);
+            }
+        } catch (error) {
+            console.error("A critical error occurred while trying to play alarm sound:", error);
+            playSound(defaultSoundURL);
+        }
 
         document.getElementById('fired-alarm-label').textContent = alarm.label || this.getText('alarm_fired_subtitle');
         const tips = await this.db.tips.toArray();
@@ -674,14 +602,19 @@ const CozyWebApp = {
             listEl.innerHTML = `<p class="text-gray-400 text-center">${this.getText('alarm_list_empty')}</p>`;
             return;
         }
-        const locale = this.currentLanguage.startsWith('ja') ? 'ja-JP' : this.currentLanguage.startsWith('en') ? 'en-US' : 'vi-VN';
+        const locale = this.currentLanguage === 'ja' ? 'ja-JP' : this.currentLanguage === 'en' ? 'en-US' : 'vi-VN';
+        
         listEl.innerHTML = alarms.map(alarm => {
             const date = new Date(alarm.time);
             const repeatIcon = alarm.isRepeating ? `<span class="ml-2" title="${this.getText('alarm_list_repeats')}"><i class="fas fa-sync-alt h-4 w-4 inline text-cyan-300"></i></span>` : '';
+            
+            const formattedDate = date.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+            const formattedTime = date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+
             return `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
                         <div>
                             <p class="font-bold truncate">${alarm.label || this.getText('alarm_list_default_label')}${repeatIcon}</p>
-                            <p class="text-sm text-gray-400">${date.toLocaleDateString(locale)} - ${date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</p>
+                            <p class="text-sm text-gray-400">${formattedDate} - ${formattedTime}</p>
                         </div>
                         <button data-id="${alarm.id}" class="delete-alarm-btn text-red-400 hover:text-red-500 font-bold p-2">${this.getText('alarm_list_delete')}</button>
                     </div>`;
@@ -700,7 +633,7 @@ const CozyWebApp = {
         const listEl = document.getElementById('sound-list');
         listEl.innerHTML = userSounds.length === 0 ? `<p class="text-gray-400 text-center">${this.getText('sound_list_empty')}</p>` :
             userSounds.map(s => {
-                const icon = s.type === 'youtube' ? 'fab fa-youtube' : (s.icon || 'fas fa-music');
+                const icon = s.type === 'youtube' ? 'fab fa-youtube text-red-500' : (s.icon || 'fas fa-music');
                 return `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
                             <span class="truncate w-48 flex items-center"><i class="${icon} fa-fw mr-2"></i>${s.name}</span>
                             <button data-id="${s.id}" class="delete-sound-btn text-red-400 hover:text-red-500 font-bold text-xs">${this.getText('alarm_list_delete')}</button>
@@ -857,22 +790,14 @@ const CozyWebApp = {
     },
 
     animateGlobalStats: function() {
-        let users = 1234 + Math.floor(Math.random() * 100);
-        let hours = 5678 + Math.floor(Math.random() * 200);
-        let visits = 9101 + Math.floor(Math.random() * 500);
-        const usersEl = document.getElementById('global-users');
-        const hoursEl = document.getElementById('global-hours');
-        const visitsEl = document.getElementById('global-visits');
-        const update = () => {
-            users += Math.floor(Math.random() * 2);
-            hours += Math.floor(Math.random() * 3);
-            visits += Math.floor(Math.random() * 5);
-            usersEl.textContent = users.toLocaleString(this.currentLanguage);
-            hoursEl.textContent = hours.toLocaleString(this.currentLanguage);
-            visitsEl.textContent = visits.toLocaleString(this.currentLanguage);
-        };
-        update();
-        setInterval(update, 3000);
+        // --- FIX: This function contains the fake data logic. ---
+        // By leaving this function empty, the animation will no longer run,
+        // and the initial HTML values (or 0) will be displayed.
+
+        // To completely reset the values to 0, uncomment the lines below:
+        // document.getElementById('global-users').textContent = '0';
+        // document.getElementById('global-hours').textContent = '0';
+        // document.getElementById('global-visits').textContent = '0';
     },
 
     // --- Sound Management (CRUD & Modals) ---

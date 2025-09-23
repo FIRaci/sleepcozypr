@@ -289,8 +289,8 @@ header { position: fixed; top: 0; left: 0; width: 100%; z-index: 30; background:
     background-color: rgba(44, 62, 80, 0.15);
     box-shadow: 0 0 10px rgba(44, 62, 80, 0.2);
 }
-.theme-dawn .form-input, .theme-dawn .form-select, .theme-dawn .form-textarea, .theme-dawn .custom-time-input,
-.theme-beach .form-input, .theme-beach .form-select, .theme-beach .form-textarea, .theme-beach .custom-time-input {
+.theme-dawn .form-input, .theme-dawn .form-select, .theme-dawn .form-textarea,
+.theme-beach .form-input, .theme-beach .form-select, .theme-beach .form-textarea {
     background-color: rgba(255, 255, 255, 0.5);
     border-color: rgba(44, 62, 80, 0.3);
     color: var(--color-text-day);
@@ -305,10 +305,6 @@ header { position: fixed; top: 0; left: 0; width: 100%; z-index: 30; background:
 }
 
 /* Player, DatePicker & Misc Light Theme */
-.theme-dawn duet-date-picker, .theme-beach duet-date-picker {
-    --duet-color-primary: #302b63; --duet-color-text: var(--color-text-day);
-    --duet-color-background: rgba(255, 255, 255, 0.5); --duet-color-surface: rgba(230, 230, 250, 0.95);
-}
 .theme-dawn .personal-stats-item, .theme-beach .personal-stats-item,
 .theme-dawn .ai-message.ai, .theme-beach .ai-message.ai {
     background-color: rgba(200, 210, 220, 0.5);
@@ -339,7 +335,7 @@ header { position: fixed; top: 0; left: 0; width: 100%; z-index: 30; background:
 .btn-modal-secondary { background-color: rgba(255,255,255,0.1); color: var(--color-text-night); font-weight: 600; padding: 0.5rem 1.25rem; border-radius: 9999px; }
 
 /* --- Accessibility --- */
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, duet-date-picker:focus-visible {
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: 4px;
@@ -360,9 +356,55 @@ body.sidebar-active .sidebar-container { transform: translateX(0); }
 .tab-nav-button i { font-size: 24px; color: var(--color-text-night); }
 
 /* --- General UI components --- */
-.form-input, .form-select, .form-textarea, .custom-time-input { background-color: rgba(30,28,62,0.8); border: 1px solid #4a5568; border-radius: 8px; padding: 0.625rem; color: #E0E0E0; width: 100%; }
-.form-input:focus, .form-select:focus, .form-textarea:focus, .custom-time-input:focus-within { outline: none; border-color: #fdf4a6; box-shadow: 0 0 0 2px rgba(253, 244, 166, 0.5); }
-duet-date-picker { --duet-color-primary: #fdf4a6; --duet-color-text: #E0E0E0; --duet-color-background: rgba(30,28,62,0.8); --duet-color-surface: rgba(48, 43, 99, 0.9); --duet-border-radius: 8px; margin-bottom: 1rem; }
+.form-input, .form-select, .form-textarea { background-color: rgba(30,28,62,0.8); border: 1px solid #4a5568; border-radius: 8px; padding: 0.625rem; color: #E0E0E0; width: 100%; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #fdf4a6; box-shadow: 0 0 0 2px rgba(253, 244, 166, 0.5); }
+
+/* START: NATIVE DATE/TIME STYLING */
+/* General style for the picker icon */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* --- FIX FOR DARK THEMES (Night & Sunset) --- */
+/* We set the color scheme to dark and invert the icon color to white */
+.theme-default input[type="date"],
+.theme-default input[type="time"],
+.theme-sunset input[type="date"],
+.theme-sunset input[type="time"] {
+    color-scheme: dark;
+}
+
+.theme-default input[type="date"]::-webkit-calendar-picker-indicator,
+.theme-default input[type="time"]::-webkit-calendar-picker-indicator,
+.theme-sunset input[type="date"]::-webkit-calendar-picker-indicator,
+.theme-sunset input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0); /* This turns the black icon to white */
+}
+
+/* --- STYLING FOR LIGHT THEMES (Dawn & Beach) --- */
+/* We set the color scheme to light and ensure the icon remains black */
+.theme-dawn input[type="date"], 
+.theme-dawn input[type="time"],
+.theme-beach input[type="date"], 
+.theme-beach input[type="time"] {
+    color-scheme: light;
+}
+
+.theme-dawn input[type="date"]::-webkit-calendar-picker-indicator,
+.theme-dawn input[type="time"]::-webkit-calendar-picker-indicator,
+.theme-beach input[type="date"]::-webkit-calendar-picker-indicator,
+.theme-beach input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0); /* This keeps the icon black */
+}
+/* END: NATIVE DATE/TIME STYLING */
 
 #mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
 #mobile-menu.show { max-height: 300px; }
@@ -374,10 +416,6 @@ duet-date-picker { --duet-color-primary: #fdf4a6; --duet-color-text: #E0E0E0; --
 input:checked + .slider { background-color: var(--color-primary); }
 input:checked + .slider:before { transform: translateX(22px); }
 
-.time-picker-popover { background: rgba(48, 43, 99, 0.95); backdrop-filter: blur(5px); border: 1px solid #4a5568; }
-.time-picker-column { height: 150px; overflow-y: scroll; scroll-snap-type: y mandatory; }
-.time-picker-item { height: 30px; display: flex; align-items: center; justify-content: center; scroll-snap-align: center; cursor: pointer; }
-.time-picker-item.selected { color: var(--color-primary); font-weight: 600; }
 
 /* --- Modals --- */
 .fixed-modal { position: fixed; inset: 0; background-color: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 50; visibility: visible; opacity: 1; transition: visibility 0s, opacity 0.3s; }

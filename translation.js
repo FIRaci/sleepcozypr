@@ -68,6 +68,8 @@ const translations = {
         sidebar_alarm_title: "Set Alarm",
         alarm_form_date: "Select date",
         alarm_form_time: "Select time",
+        alarm_form_date_placeholder: "Select a date",
+        alarm_form_time_placeholder: "Select a time",
         alarm_form_label: "Alarm name",
         alarm_form_label_placeholder: "e.g., Wake up for exercise",
         alarm_form_sound: "Sound",
@@ -110,6 +112,8 @@ const translations = {
         ai_welcome_message: "Hello! Do you need help with a sleep schedule or some relaxation advice?",
         ai_input_placeholder: "e.g., How can I fall asleep faster?",
         ai_key_error: "Please configure the application correctly to use the AI Assistant.",
+        ai_error_generic: "Sorry, an error occurred while connecting to the AI.",
+        ai_understanding_error: "Sorry, I didn't quite understand that.",
         // Modals
         alarm_fired_title: "It's time!",
         alarm_fired_subtitle: "Time to wake up!",
@@ -212,6 +216,8 @@ const translations = {
         sidebar_alarm_title: "Cài đặt Báo thức",
         alarm_form_date: "Chọn ngày",
         alarm_form_time: "Chọn giờ",
+        alarm_form_date_placeholder: "Chọn một ngày",
+        alarm_form_time_placeholder: "Chọn một giờ",
         alarm_form_label: "Tên báo thức",
         alarm_form_label_placeholder: "Ví dụ: Dậy sớm tập thể dục",
         alarm_form_sound: "Âm thanh",
@@ -254,6 +260,8 @@ const translations = {
         ai_welcome_message: "Xin chào! Bạn cần tôi giúp về lịch trình ngủ nghỉ hay cần một vài lời khuyên để thư giãn?",
         ai_input_placeholder: "Ví dụ: Làm sao để ngủ nhanh hơn?",
         ai_key_error: "Vui lòng cấu hình ứng dụng đúng theo hướng dẫn để sử dụng Trợ lý AI.",
+        ai_error_generic: "Xin lỗi, đã có lỗi xảy ra khi kết nối với AI.",
+        ai_understanding_error: "Xin lỗi, tôi chưa hiểu rõ ý của bạn.",
         // Modals
         alarm_fired_title: "Đến giờ rồi!",
         alarm_fired_subtitle: "Dậy thôi nào!",
@@ -356,6 +364,8 @@ const translations = {
         sidebar_alarm_title: "アラーム設定",
         alarm_form_date: "日付を選択",
         alarm_form_time: "時間を選択",
+        alarm_form_date_placeholder: "日付を選択",
+        alarm_form_time_placeholder: "時間を選択",
         alarm_form_label: "アラーム名",
         alarm_form_label_placeholder: "例：運動のために早起き",
         alarm_form_sound: "サウンド",
@@ -398,6 +408,8 @@ const translations = {
         ai_welcome_message: "こんにちは！睡眠スケジュールの設定やリラクゼーションのアドバイスが必要ですか？",
         ai_input_placeholder: "例：どうすれば早く眠れますか？",
         ai_key_error: "AIアシスタントを使用するには、アプリケーションを正しく設定してください。",
+        ai_error_generic: "申し訳ありませんが、AIへの接続中にエラーが発生しました。",
+        ai_understanding_error: "申し訳ありませんが、よく理解できませんでした。",
         // Modals
         alarm_fired_title: "時間です！",
         alarm_fired_subtitle: "起きる時間です！",
@@ -433,4 +445,3 @@ const translations = {
         sound_name_ocean: "海の波",
     }
 };
-
