@@ -29,6 +29,20 @@ const CozyWebApp = {
         ocean: { name_key: 'sound_name_ocean', icon: 'fas fa-water', url: 'https://www.soundjay.com/nature/ocean-wave-1.mp3' },
     },
 
+    // --- FIX: Add a predefined list of tips to be "unlocked" ---
+    defaultTips: [
+        "Tạo một lịch trình ngủ đều đặn, đi ngủ và thức dậy vào cùng một thời điểm mỗi ngày, kể cả cuối tuần.",
+        "Đảm bảo phòng ngủ của bạn tối, yên tĩnh, và mát mẻ. Che chắn mọi ánh sáng và sử dụng nút bịt tai nếu cần.",
+        "Tránh sử dụng các thiết bị điện tử như điện thoại, máy tính bảng ít nhất 30 phút trước khi ngủ.",
+        "Tránh ăn no, uống cà phê hoặc rượu bia gần giờ đi ngủ.",
+        "Tập thể dục thường xuyên, nhưng tránh tập cường độ cao ngay trước khi ngủ.",
+        "Thử các kỹ thuật thư giãn như thiền, yoga nhẹ, hoặc đọc sách để tâm trí được nghỉ ngơi.",
+        "Nếu bạn không thể ngủ sau 20 phút, hãy ra khỏi giường và làm gì đó thư giãn cho đến khi cảm thấy buồn ngủ.",
+        "Tắm nước ấm trước khi ngủ có thể giúp cơ thể thư giãn và dễ đi vào giấc ngủ hơn.",
+        "Hạn chế ngủ trưa quá lâu hoặc quá muộn trong ngày.",
+        "Viết ra những lo lắng hoặc danh sách việc cần làm cho ngày mai để giải tỏa tâm trí trước khi ngủ."
+    ],
+
     // Pomodoro timer settings
     pomodoro: { pomodoro: 25, shortBreak: 5, longBreak: 15, sessions: 0 },
     pomodoroInterval: null,
@@ -49,6 +63,7 @@ const CozyWebApp = {
         this.createStars();
         setInterval(() => this.updateClock(), 1000); // Update clock and check for theme changes
         this.initStats();
+        this.renderTipsList();
         setTimeout(() => { document.body.classList.remove('loading'); }, 100);
     },
 
@@ -92,6 +107,7 @@ const CozyWebApp = {
         this.renderPersonalStats();
         this.updatePlayerUI();
         this.updatePomodoroDisplay();
+        this.renderTipsList();
 
         document.getElementById('current-lang-text').textContent = lang.toUpperCase();
         this.db.settings.put({ key: 'language', value: lang });
@@ -574,8 +590,22 @@ const CozyWebApp = {
         }
 
         document.getElementById('fired-alarm-label').textContent = alarm.label || this.getText('alarm_fired_subtitle');
-        const tips = await this.db.tips.toArray();
-        document.getElementById('tip-content').textContent = tips.length > 0 ? tips[Math.floor(Math.random() * tips.length)].content : this.getText('ai_welcome_message');
+        
+        // --- FIX: Get a tip from the predefined list and save it ---
+        const tipContent = this.defaultTips[Math.floor(Math.random() * this.defaultTips.length)];
+        document.getElementById('tip-content').textContent = tipContent;
+
+        if (tipContent) {
+            try {
+                await this.db.tips.put({ content: tipContent }); 
+                this.renderTipsList();
+            } catch (e) {
+                if (e.name !== 'ConstraintError') {
+                    console.error("Error saving tip:", e);
+                }
+            }
+        }
+        
         document.getElementById('alarm-fired-modal').classList.remove('hidden');
 
         if (alarm.isRepeating) {
@@ -789,15 +819,27 @@ const CozyWebApp = {
         document.getElementById('personal-favorite-sound').textContent = favSound;
     },
 
+    // --- FIX: Re-enable subtle animation for global stats ---
     animateGlobalStats: function() {
-        // --- FIX: This function contains the fake data logic. ---
-        // By leaving this function empty, the animation will no longer run,
-        // and the initial HTML values (or 0) will be displayed.
+        let users = parseInt(document.getElementById('global-users').textContent) || 17;
+        let hours = parseInt(document.getElementById('global-hours').textContent) || 42;
+        let visits = parseInt(document.getElementById('global-visits').textContent) || 89;
 
-        // To completely reset the values to 0, uncomment the lines below:
-        // document.getElementById('global-users').textContent = '0';
-        // document.getElementById('global-hours').textContent = '0';
-        // document.getElementById('global-visits').textContent = '0';
+        const usersEl = document.getElementById('global-users');
+        const hoursEl = document.getElementById('global-hours');
+        const visitsEl = document.getElementById('global-visits');
+
+        const update = () => {
+            if (Math.random() > 0.7) users += 1;
+            if (Math.random() > 0.4) hours += 1;
+            visits += Math.floor(Math.random() * 3) + 1;
+            
+            usersEl.textContent = users.toLocaleString(this.currentLanguage);
+            hoursEl.textContent = hours.toLocaleString(this.currentLanguage);
+            visitsEl.textContent = visits.toLocaleString(this.currentLanguage);
+        };
+        
+        setInterval(update, 8000 + Math.random() * 4000); // Update every 8-12 seconds
     },
 
     // --- Sound Management (CRUD & Modals) ---
