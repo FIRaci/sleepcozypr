@@ -122,10 +122,9 @@
                 <h2 class="text-4xl font-bold mb-4" data-i18n-key="community_title">Cộng đồng Chill Cùng Nhau</h2>
                 <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="community_subtitle">Mỗi khoảnh khắc thư giãn của bạn góp phần tạo nên một không gian yên bình chung.</p>
                 <div class="grid md:grid-cols-3 gap-8">
-                    <!-- FIX: Setting small initial values for stats -->
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-users text-5xl text-purple-300"></i></div><h3 id="global-users" class="text-4xl font-bold mb-2">17</h3><p class="text-gray-400" data-i18n-key="stats_global_users">Tâm hồn đồng điệu</p></div>
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-headphones-alt text-5xl text-cyan-300"></i></div><h3 id="global-hours" class="text-4xl font-bold mb-2">42</h3><p class="text-gray-400" data-i18n-key="stats_global_hours">Giờ đã thư giãn</p></div>
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-mouse-pointer text-5xl text-yellow-300"></i></div><h3 id="global-visits" class="text-4xl font-bold mb-2">89</h3><p class="text-gray-400" data-i18n-key="stats_global_visits">Lượt ghé thăm</p></div>
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-users text-5xl text-purple-300"></i></div><h3 id="global-users" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_users">Tâm hồn đồng điệu</p></div>
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-headphones-alt text-5xl text-cyan-300"></i></div><h3 id="global-hours" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_hours">Giờ đã thư giãn</p></div>
+                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-mouse-pointer text-5xl text-yellow-300"></i></div><h3 id="global-visits" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_visits">Lượt ghé thăm</p></div>
                 </div>
             </div>
         </section>
@@ -215,10 +214,13 @@
         </div>
     </div>
     
-    <audio id="alarm-audio-player"></audio><audio id="ambient-player" loop></audio><audio id="pomodoro-complete-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3"></audio>
+    <audio id="alarm-audio-player"></audio><audio id="ambient-player" loop></audio>
 
     <!-- Modals and Popovers -->
     <div id="alarm-fired-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-3xl font-bold text-yellow-300 mb-2" data-i18n-key="alarm_fired_title">Đến giờ rồi!</h3><p id="fired-alarm-label" class="text-xl text-white mb-4" data-i18n-key="alarm_fired_subtitle">Dậy thôi nào!</p><div class="bg-gray-700/50 p-4 rounded-lg mb-6"><h4 class="font-semibold text-yellow-400 mb-2" data-i18n-key="alarm_fired_tip_title">Mẹo hay cho bạn:</h4><p id="tip-content" class="text-gray-300"></p></div><button id="dismiss-alarm-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-colors" data-i18n-key="alarm_fired_dismiss">Tắt báo thức</button></div></div></div>
+    
+    <div id="pomodoro-end-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 id="pomodoro-end-title" class="text-3xl font-bold text-yellow-300 mb-2" data-i18n-key="pomodoro_end_title">Hết giờ!</h3><p id="pomodoro-end-subtitle" class="text-xl text-white mb-4"></p><div class="bg-gray-700/50 p-4 rounded-lg mb-6"><h4 class="font-semibold text-yellow-400 mb-2" data-i18n-key="alarm_fired_tip_title">Mẹo hay cho bạn:</h4><p id="pomodoro-tip-content" class="text-gray-300"></p></div><button id="dismiss-pomodoro-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-colors" data-i18n-key="pomodoro_end_dismiss">OK, Bắt đầu phiên tiếp theo</button></div></div></div>
+
     <div id="edit-sound-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="edit_sound_title">Chỉnh sửa Âm thanh</h3><form id="edit-sound-form" class="space-y-4"><input type="hidden" id="edit-sound-id"><div><label for="edit-sound-name" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="edit_sound_name">Tên Âm thanh</label><input type="text" id="edit-sound-name" class="form-input" required></div><div><label for="edit-sound-icon" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="edit_sound_icon">Icon</label><input type="text" id="edit-sound-icon" class="form-input" data-i18n-key-placeholder="edit_sound_icon_placeholder"><p class="text-xs text-gray-500 mt-1" data-i18n-key="edit_sound_icon_desc">Dán emoji hoặc class của Font Awesome.</p></div><div class="flex justify-end space-x-4 pt-4"><button type="button" class="btn-modal-secondary" data-modal-close="edit-sound-modal" data-i18n-key="btn_cancel">Hủy</button><button type="submit" class="btn-modal-primary" data-i18n-key="btn_save">Lưu</button></div></form></div></div></div>
     <div id="restore-sounds-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-semibold text-white text-center" data-i18n-key="restore_sound_title">Âm thanh đã ẩn</h3><button data-modal-close="restore-sounds-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div id="hidden-sounds-list" class="space-y-3 max-h-64 overflow-y-auto"></div></div></div></div>
     <div id="add-sound-choice-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="add_sound_title">Thêm Âm thanh mới</h3><div class="flex flex-col space-y-4"><button id="add-sound-upload-btn" class="btn-modal-primary"><i class="fas fa-upload mr-2"></i><span data-i18n-key="add_sound_from_file">Tải lên từ thiết bị</span></button><button id="add-sound-youtube-btn" class="btn-modal-secondary"><i class="fab fa-youtube mr-2"></i><span data-i18n-key="add_sound_from_yt">Thêm từ link YouTube</span></button></div></div></div></div>
@@ -255,4 +257,3 @@
 </body>
 </html>
 
-    

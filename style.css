@@ -386,7 +386,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 .theme-default input[type="time"]::-webkit-calendar-picker-indicator,
 .theme-sunset input[type="date"]::-webkit-calendar-picker-indicator,
 .theme-sunset input[type="time"]::-webkit-calendar-picker-indicator {
-    filter: invert(1); /* This turns the black icon to white */
+    filter: invert(0); /* This turns the black icon to white */
 }
 
 /* --- STYLING FOR LIGHT THEMES (Dawn & Beach) --- */
