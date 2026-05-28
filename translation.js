@@ -8,13 +8,12 @@ const translations = {
         nav_features: "Features",
         nav_experience: "Experience",
         nav_library: "Library",
-        nav_community: "Community",
         nav_about: "About",
         nav_tab_timer: "Timer",
         nav_tab_schedule: "Schedule",
         nav_tab_sounds: "Sounds",
         nav_tab_tips: "Tips",
-        nav_tab_space: "Space",
+        nav_tab_chill: "Chill & Heal",
         nav_tab_stats: "Stats",
         nav_tab_ai: "AI Assistant",
         // Home Section
@@ -27,8 +26,8 @@ const translations = {
         features_subtitle: "Tools designed to cherish your sleep and optimize your relaxation.",
         feature_ai_title: "Smart AI Assistant",
         feature_ai_desc: "Get personalized advice and tips for better sleep and relaxation.",
-        feature_sound_title: "Sound Library",
-        feature_sound_desc: "Create your own sound collection, from default sounds, uploads, to YouTube links.",
+        feature_chill_title: "Sound Library",
+        feature_chill_desc: "Create your own sound collection, from default sounds, uploads, to YouTube links.",
         feature_cycle_title: "Day-Night Cycle",
         feature_cycle_desc: "Experience a space that automatically changes from dawn, day, sunset to night.",
         // Experience Section (Pomodoro)
@@ -48,12 +47,6 @@ const translations = {
         theme_sunset: "Warm Sunset",
         theme_dawn: "Gentle Dawn",
         theme_beach: "Blue Sea Day",
-        // Community Section (Stats)
-        community_title: "Chilling Together Community",
-        community_subtitle: "Every moment of your relaxation contributes to a shared peaceful space.",
-        stats_global_users: "Kindred Spirits",
-        stats_global_hours: "Hours Relaxed",
-        stats_global_visits: "Visits",
         // About Section
         about_title: "About The Cozy Web",
         about_subtitle: "This is a passion project created with the goal of bringing peace of mind and improving your sleep quality and work performance through every line of code.",
@@ -91,15 +84,14 @@ const translations = {
         // Sidebar - Tips
         sidebar_tips_title: "Sleep Tips",
         tips_list_empty: "Unlock helpful tips here!",
-        // Sidebar - Relaxation Space
-        sidebar_space_title: "Relaxation Space",
-        space_restore_btn_title: "Restore hidden sounds",
-        sound_card_add: "Add New",
-        sound_option_edit: "Edit",
-        sound_option_favorite: "Favorite",
-        sound_option_delete: "Delete",
-        sound_option_hide: "Hide",
-        confirm_delete_sound: "Are you sure you want to delete this sound?",
+        // Sidebar - Chill & Heal
+        sidebar_chill_title: "Chill & Heal",
+        breathing_title: "Breathing Exercise",
+        breathing_inhale: "Inhale",
+        breathing_hold: "Hold",
+        breathing_exhale: "Exhale",
+        breathing_start_btn: "Start",
+        breathing_stop_btn: "Stop",
         // Sidebar - Stats
         sidebar_stats_title: "Your Relaxation Journey",
         stats_chilling_time: "Total chilling time",
@@ -128,9 +120,6 @@ const translations = {
         edit_sound_icon: "Icon",
         edit_sound_icon_placeholder: "e.g., 🎵 or fas fa-music",
         edit_sound_icon_desc: "Paste an emoji or a Font Awesome class.",
-        restore_sound_title: "Hidden Sounds",
-        restore_sound_empty: "No sounds are hidden.",
-        restore_sound_unhide: "Unhide",
         add_sound_title: "Add New Sound",
         add_sound_from_file: "Upload from device",
         add_sound_from_yt: "Add from YouTube link",
@@ -138,8 +127,6 @@ const translations = {
         add_yt_input_label: "Paste YouTube video link here",
         add_yt_placeholder: "https://www.youtube.com/watch?v=...",
         add_yt_error_invalid: "Invalid YouTube link. Please try again.",
-        // Audio Player
-        player_default_name: "Choose a space",
         // General UI
         btn_save: "Save",
         btn_cancel: "Cancel",
@@ -151,6 +138,7 @@ const translations = {
         sound_name_wind: "Wind",
         sound_name_campfire: "Campfire",
         sound_name_ocean: "Ocean Waves",
+        sound_card_add: "Add New",
         // Sleep Tips
         tip_1: "Create a regular sleep schedule. Go to bed and wake up at the same time every day, even on weekends.",
         tip_2: "Make sure your bedroom is dark, quiet, and cool. Block out any light and use earplugs if needed.",
@@ -171,13 +159,12 @@ const translations = {
         nav_features: "Tính năng",
         nav_experience: "Trải nghiệm",
         nav_library: "Thư viện",
-        nav_community: "Cộng đồng",
         nav_about: "Về chúng tôi",
         nav_tab_timer: "Hẹn giờ",
         nav_tab_schedule: "Lịch trình",
         nav_tab_sounds: "Âm thanh",
         nav_tab_tips: "Mẹo",
-        nav_tab_space: "Không Gian",
+        nav_tab_chill: "Không Gian",
         nav_tab_stats: "Thống kê",
         nav_tab_ai: "Trợ lý AI",
         // Home Section
@@ -190,8 +177,8 @@ const translations = {
         features_subtitle: "Những công cụ được thiết kế để nâng niu giấc ngủ và tối ưu hóa sự thư giãn của bạn.",
         feature_ai_title: "Trợ lý AI Thông Minh",
         feature_ai_desc: "Nhận lời khuyên và mẹo được cá nhân hóa để ngủ ngon và thư giãn tốt hơn.",
-        feature_sound_title: "Thư viện Âm thanh",
-        feature_sound_desc: "Tạo bộ sưu tập âm thanh của riêng bạn, từ mặc định, tải lên, cho đến link YouTube.",
+        feature_chill_title: "Thư viện Âm thanh",
+        feature_chill_desc: "Tạo bộ sưu tập âm thanh của riêng bạn, từ mặc định, tải lên, cho đến link YouTube.",
         feature_cycle_title: "Chu kỳ Ngày-Đêm",
         feature_cycle_desc: "Trải nghiệm không gian thay đổi tự động từ bình minh, ban ngày, hoàng hôn đến ban đêm.",
         // Experience Section (Pomodoro)
@@ -211,12 +198,6 @@ const translations = {
         theme_sunset: "Hoàng Hôn Ấm Áp",
         theme_dawn: "Bình Minh Dịu Êm",
         theme_beach: "Ngày Biển Xanh",
-        // Community Section (Stats)
-        community_title: "Cộng đồng Chill Cùng Nhau",
-        community_subtitle: "Mỗi khoảnh khắc thư giãn của bạn góp phần tạo nên một không gian yên bình chung.",
-        stats_global_users: "Tâm hồn đồng điệu",
-        stats_global_hours: "Giờ đã thư giãn",
-        stats_global_visits: "Lượt ghé thăm",
         // About Section
         about_title: "Về The Cozy Web",
         about_subtitle: "Đây là một dự án tâm huyết được tạo ra với mục tiêu mang lại sự bình yên trong tâm hồn và cải thiện chất lượng giấc ngủ cũng như hiệu suất làm việc của bạn qua từng dòng code.",
@@ -254,15 +235,14 @@ const translations = {
         // Sidebar - Tips
         sidebar_tips_title: "Mẹo cho Giấc ngủ",
         tips_list_empty: "Mở khóa mẹo hay ở đây!",
-        // Sidebar - Relaxation Space
-        sidebar_space_title: "Không Gian Thư Giãn",
-        space_restore_btn_title: "Khôi phục âm thanh đã ẩn",
-        sound_card_add: "Thêm mới",
-        sound_option_edit: "Chỉnh sửa",
-        sound_option_favorite: "Yêu thích",
-        sound_option_delete: "Xóa",
-        sound_option_hide: "Ẩn",
-        confirm_delete_sound: "Bạn có chắc chắn muốn xóa âm thanh này?",
+        // Sidebar - Chill & Heal
+        sidebar_chill_title: "Không Gian Thư Giãn",
+        breathing_title: "Bài Tập Thở",
+        breathing_inhale: "Hít vào",
+        breathing_hold: "Giữ",
+        breathing_exhale: "Thở ra",
+        breathing_start_btn: "Bắt đầu",
+        breathing_stop_btn: "Dừng",
         // Sidebar - Stats
         sidebar_stats_title: "Hành Trình Thư Giãn",
         stats_chilling_time: "Tổng giờ chill",
@@ -291,9 +271,6 @@ const translations = {
         edit_sound_icon: "Icon",
         edit_sound_icon_placeholder: "Ví dụ: 🎵 hoặc fas fa-music",
         edit_sound_icon_desc: "Dán emoji hoặc class của Font Awesome.",
-        restore_sound_title: "Âm thanh đã ẩn",
-        restore_sound_empty: "Không có âm thanh nào bị ẩn.",
-        restore_sound_unhide: "Hiện lại",
         add_sound_title: "Thêm Âm thanh mới",
         add_sound_from_file: "Tải lên từ thiết bị",
         add_sound_from_yt: "Thêm từ link YouTube",
@@ -301,8 +278,6 @@ const translations = {
         add_yt_input_label: "Dán link video YouTube vào đây",
         add_yt_placeholder: "https://www.youtube.com/watch?v=...",
         add_yt_error_invalid: "Link YouTube không hợp lệ. Vui lòng thử lại.",
-        // Audio Player
-        player_default_name: "Chọn một không gian",
         // General UI
         btn_save: "Lưu",
         btn_cancel: "Hủy",
@@ -334,13 +309,12 @@ const translations = {
         nav_features: "特徴",
         nav_experience: "体験",
         nav_library: "ライブラリ",
-        nav_community: "コミュニティ",
         nav_about: "概要",
         nav_tab_timer: "タイマー",
         nav_tab_schedule: "スケジュール",
         nav_tab_sounds: "サウンド",
         nav_tab_tips: "ヒント",
-        nav_tab_space: "空間",
+        nav_tab_chill: "空間",
         nav_tab_stats: "統計",
         nav_tab_ai: "AIアシスタント",
         // Home Section
@@ -353,8 +327,8 @@ const translations = {
         features_subtitle: "あなたの睡眠を大切にし、リラクゼーションを最適化するために設計されたツール。",
         feature_ai_title: "スマートAIアシスタント",
         feature_ai_desc: "より良い睡眠とリラクゼーションのための個別のアドバイスやヒントを得る。",
-        feature_sound_title: "サウンドライブラリ",
-        feature_sound_desc: "デフォルトのサウンド、アップロード、YouTubeリンクから独自のサウンドコレクションを作成します。",
+        feature_chill_title: "サウンドライブラリ",
+        feature_chill_desc: "デフォルトのサウンド、アップロード、YouTubeリンクから独自のサウンドコレクションを作成します。",
         feature_cycle_title: "昼夜サイクル",
         feature_cycle_desc: "夜明け、昼、夕暮れ、夜へと自動的に変化する空間を体験してください。",
         // Experience Section (Pomodoro)
@@ -374,12 +348,6 @@ const translations = {
         theme_sunset: "暖かい夕日",
         theme_dawn: "穏やかな夜明け",
         theme_beach: "青い海の日",
-        // Community Section (Stats)
-        community_title: "みんなでチルするコミュニティ",
-        community_subtitle: "あなたのリラクゼーションのすべての瞬間が、共有された平和な空間を作り出します。",
-        stats_global_users: "同志",
-        stats_global_hours: "リラックスした時間",
-        stats_global_visits: "訪問数",
         // About Section
         about_title: "The Cozy Webについて",
         about_subtitle: "これは、コードの一行一行を通じて、心の平穏をもたらし、睡眠の質と仕事のパフォーマンスを向上させることを目標に作成された情熱的なプロジェクトです。",
@@ -417,15 +385,14 @@ const translations = {
         // Sidebar - Tips
         sidebar_tips_title: "睡眠のヒント",
         tips_list_empty: "ここで役立つヒントをアンロック！",
-        // Sidebar - Relaxation Space
-        sidebar_space_title: "リラクゼーション空間",
-        space_restore_btn_title: "非表示のサウンドを復元",
-        sound_card_add: "新しく追加",
-        sound_option_edit: "編集",
-        sound_option_favorite: "お気に入り",
-        sound_option_delete: "削除",
-        sound_option_hide: "非表示",
-        confirm_delete_sound: "このサウンドを本当に削除しますか？",
+        // Sidebar - Chill & Heal
+        sidebar_chill_title: "リラクゼーション空間",
+        breathing_title: "呼吸エクササイズ",
+        breathing_inhale: "吸う",
+        breathing_hold: "止める",
+        breathing_exhale: "吐く",
+        breathing_start_btn: "開始",
+        breathing_stop_btn: "停止",
         // Sidebar - Stats
         sidebar_stats_title: "あなたのリラクゼーションの旅",
         stats_chilling_time: "合計チルタイム",
@@ -454,9 +421,6 @@ const translations = {
         edit_sound_icon: "アイコン",
         edit_sound_icon_placeholder: "例：🎵 または fas fa-music",
         edit_sound_icon_desc: "絵文字またはFont Awesomeクラスを貼り付けます。",
-        restore_sound_title: "非表示のサウンド",
-        restore_sound_empty: "非表示のサウンドはありません。",
-        restore_sound_unhide: "再表示",
         add_sound_title: "新しいサウンドを追加",
         add_sound_from_file: "デバイスからアップロード",
         add_sound_from_yt: "YouTubeリンクから追加",
@@ -464,8 +428,6 @@ const translations = {
         add_yt_input_label: "YouTube動画のリンクをここに貼り付け",
         add_yt_placeholder: "https://www.youtube.com/watch?v=...",
         add_yt_error_invalid: "無効なYouTubeリンクです。もう一度お試しください。",
-        // Audio Player
-        player_default_name: "空間を選択",
         // General UI
         btn_save: "保存",
         btn_cancel: "キャンセル",

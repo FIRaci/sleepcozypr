@@ -8,18 +8,19 @@ const CozyWebApp = {
     db: null,
     alarmWorker: null,
     swiper: null,
-    chillingTimeTracker: null,
     themeMode: 'auto',
     lastManualTheme: 'theme-default',
     lastAppliedTheme: null,
     shootingStarInterval: null,
+    weatherState: null,
+    weatherTimer: null,
+    lastCloudCount: 0,
     currentEditingSound: null,
-    activeSoundKey: null,
     currentLanguage: 'vi',
     geminiAPIKey: 'GEMINI_API_KEY',
     ytPlayer: null,
 
-    // Default ambient sounds library
+    // Default alarm sounds library
     ambientSoundFiles: {
         rain: { name_key: 'sound_name_rain', icon: 'fas fa-cloud-showers-heavy', url: 'https://www.soundjay.com/nature/rain-04.mp3' },
         river: { name_key: 'sound_name_river', icon: 'fas fa-water', url: 'https://www.soundjay.com/nature/sounds/river-2.mp3' },
@@ -40,6 +41,11 @@ const CozyWebApp = {
     pomodoroInterval: null,
     pomodoroRemainingTime: 25 * 60,
     pomodoroMode: 'pomodoro',
+    breathingInterval: null,
+    breathingPhase: 'inhale',
+    breathingTime: 4,
+    breathingActive: false,
+    breathingPattern: { inhale: 4, hold: 4, exhale: 4 },
 
     /**
      * Main initialization function for the entire application.
@@ -53,6 +59,7 @@ const CozyWebApp = {
         this.initWorker();
         await this.loadSavedData();
         this.createStars();
+        this.initWeatherSystem();
         setInterval(() => this.updateClock(), 1000); 
         this.initStats();
         this.renderTipsList();
@@ -95,9 +102,7 @@ const CozyWebApp = {
         
         this.renderAlarmList();
         this.renderSoundList();
-        this.renderAmbientSoundGrid();
         this.renderPersonalStats();
-        this.updatePlayerUI();
         this.updatePomodoroDisplay();
         this.renderTipsList();
 
@@ -149,9 +154,6 @@ const CozyWebApp = {
             if (document.body.classList.contains('sidebar-active') && !sidebar.contains(e.target) && !e.target.closest('#open-sidebar-cta')) {
                  document.body.classList.remove('sidebar-active');
             }
-            if (!e.target.closest('.sound-options-btn')) {
-                document.querySelectorAll('.sound-options-menu').forEach(menu => menu.style.display = 'none');
-            }
         });
         document.getElementById('theme-selector').addEventListener('click', (e) => {
             const themeCard = e.target.closest('.theme-card');
@@ -173,7 +175,6 @@ const CozyWebApp = {
             const deleteBtn = e.target.closest('.delete-sound-btn');
             if(deleteBtn) this.deleteUserSound(parseInt(deleteBtn.dataset.id));
         });
-        document.getElementById('ambient-sounds-grid').addEventListener('click', (e) => this.handleAmbientGridClick(e));
         
         // --- Sidebar & Modals ---
         document.querySelectorAll('.tab-nav-button').forEach(button => button.addEventListener('click', () => this.swiper.slideTo(parseInt(button.dataset.slide), 300)));
@@ -230,29 +231,16 @@ const CozyWebApp = {
             document.getElementById('add-youtube-modal').classList.remove('hidden');
         });
         
-        // --- Audio Player V2 ---
-        const ambientPlayer = document.getElementById('ambient-player');
-        ambientPlayer.addEventListener('play', () => this.updatePlayerUI());
-        ambientPlayer.addEventListener('pause', () => this.updatePlayerUI());
-        ambientPlayer.addEventListener('timeupdate', () => this.updateSeekSlider());
-        ambientPlayer.addEventListener('loadedmetadata', () => this.updateSeekSlider());
-        document.getElementById('player-play-pause-btn').addEventListener('click', () => this.toggleAmbientSoundPlayback());
-        document.getElementById('player-volume-slider').addEventListener('input', (e) => ambientPlayer.volume = e.target.value);
-        document.getElementById('player-seek-slider').addEventListener('input', (e) => ambientPlayer.currentTime = e.target.value);
-        document.getElementById('player-close-btn').addEventListener('click', () => this.hideAudioPlayer());
-
         // --- Pomodoro ---
         document.querySelectorAll('.pomodoro-mode-btn').forEach(btn => btn.addEventListener('click', () => this.switchPomodoroMode(btn.dataset.mode)));
         document.getElementById('pomodoro-control-btn').addEventListener('click', () => this.pomodoroInterval ? this.pausePomodoro() : this.startPomodoro());
         document.getElementById('pomodoro-reset-btn').addEventListener('click', () => this.switchPomodoroMode(this.pomodoroMode));
         
-        // --- Edit/Restore Sounds Modals ---
+        // --- Breathing Exercise ---
+        document.getElementById('breathing-toggle-btn').addEventListener('click', () => this.toggleBreathingExercise());
+        
+        // --- Edit Sounds Modals ---
         document.getElementById('edit-sound-form').addEventListener('submit', (e) => this.saveEditedSound(e));
-        document.getElementById('restore-sounds-btn').addEventListener('click', () => this.openRestoreSoundsModal());
-        document.getElementById('hidden-sounds-list').addEventListener('click', (e) => {
-            const unhideBtn = e.target.closest('.unhide-sound-btn');
-            if(unhideBtn) this.unhideDefaultSound(unhideBtn.dataset.soundKey);
-        });
 
         // --- YouTube Player ---
         document.getElementById('close-youtube-player').addEventListener('click', () => {
@@ -443,14 +431,257 @@ const CozyWebApp = {
         if (document.querySelector('.star')) return;
         const bg = document.getElementById('dynamic-bg');
         let stars = '';
-        for (let i = 0; i < 150; i++) {
-            const size = Math.random() * 2 + 1;
+        const starTypes = ['warm', 'cool', 'bright'];
+        for (let i = 0; i < 100; i++) {
+            const size = Math.random() * 4 + 1;
             const top = Math.random() * 100;
             const left = Math.random() * 100;
-            const delay = Math.random() * 3;
-            stars += `<div class="star" style="width:${size}px; height:${size}px; top:${top}%; left:${left}%; animation-delay:${delay}s; animation-duration:${Math.random() * 2 + 2}s;"></div>`;
+            const delay = Math.random() * 5;
+            const dur = Math.random() * 4 + 1.5;
+            const type = starTypes[Math.floor(Math.random() * starTypes.length)];
+            const opacity = Math.random() * 0.8 + 0.2;
+            stars += `<div class="star ${type}" style="width:${size}px; height:${size}px; top:${top}%; left:${left}%; animation-delay:${delay}s; --twinkle-duration:${dur}s; opacity: ${opacity}"></div>`;
         }
-        bg.insertAdjacentHTML('beforeend', stars);
+        const weatherLayer = document.getElementById('weather-layer');
+        if (weatherLayer) {
+            weatherLayer.insertAdjacentHTML('beforebegin', stars);
+        } else {
+            bg.insertAdjacentHTML('beforeend', stars);
+        }
+    },
+
+    initWeatherSystem: function() {
+        this.refreshWeather(new Date(), true);
+        if (this.weatherTimer) clearInterval(this.weatherTimer);
+        this.weatherTimer = setInterval(() => this.refreshWeather(new Date()), 60000);
+    },
+
+    refreshWeather: function(now, force = false) {
+        const currentTime = now || new Date();
+        const dateKey = this.getDateKey(currentTime);
+        if (!this.weatherState || this.weatherState.dateKey !== dateKey || force) {
+            this.weatherState = this.buildDailyWeather(currentTime);
+            this.applyWeatherState(currentTime);
+            this.updateMoonPhase();
+            return;
+        }
+        this.updateWeatherLighting(currentTime);
+        this.updateCelestialPositions(currentTime);
+    },
+
+    getDateKey: function(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    },
+
+    createSeededRandom: function(seedStr) {
+        let hash = 2166136261;
+        for (let i = 0; i < seedStr.length; i++) {
+            hash ^= seedStr.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+        }
+        let seed = hash >>> 0;
+        return function() {
+            seed += 0x6D2B79F5;
+            let t = seed;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    },
+
+    chooseWeighted: function(rng, weights) {
+        const entries = Object.entries(weights);
+        const total = entries.reduce((sum, [, weight]) => sum + weight, 0);
+        let roll = rng() * total;
+        for (const [key, weight] of entries) {
+            roll -= weight;
+            if (roll <= 0) return key;
+        }
+        return entries[entries.length - 1][0];
+    },
+
+    buildDailyWeather: function(date) {
+        const dateKey = this.getDateKey(date);
+        const rng = this.createSeededRandom(dateKey);
+        const month = date.getMonth() + 1;
+
+        let weights = { clear: 0.35, partly: 0.25, overcast: 0.2, rain: 0.15, snow: 0.05 };
+        if (month === 12 || month <= 2) {
+            weights = { clear: 0.15, partly: 0.2, overcast: 0.25, rain: 0.2, snow: 0.2 };
+        } else if (month >= 3 && month <= 5) {
+            weights = { clear: 0.25, partly: 0.25, overcast: 0.2, rain: 0.25, snow: 0.05 };
+        } else if (month >= 6 && month <= 8) {
+            weights = { clear: 0.45, partly: 0.25, overcast: 0.15, rain: 0.15, snow: 0 };
+        } else if (month >= 9 && month <= 11) {
+            weights = { clear: 0.25, partly: 0.25, overcast: 0.25, rain: 0.2, snow: 0.05 };
+        }
+
+        const type = this.chooseWeighted(rng, weights);
+        let intensity = 0.3;
+        let cloudDensity = 0.2;
+        let gloom = 0.1;
+        let precipitation = null;
+
+        if (type === 'clear') {
+            intensity = 0.2 + rng() * 0.2;
+            cloudDensity = 0.15 + rng() * 0.1;
+            gloom = 0.05;
+        } else if (type === 'partly') {
+            intensity = 0.3 + rng() * 0.3;
+            cloudDensity = 0.35 + rng() * 0.3;
+            gloom = 0.15;
+        } else if (type === 'overcast') {
+            intensity = 0.5 + rng() * 0.2;
+            cloudDensity = 0.75 + rng() * 0.2;
+            gloom = 0.4 + rng() * 0.1;
+        } else if (type === 'rain') {
+            intensity = 0.6 + rng() * 0.35;
+            cloudDensity = 0.85 + rng() * 0.1;
+            gloom = 0.55 + rng() * 0.1;
+            precipitation = 'rain';
+        } else if (type === 'snow') {
+            intensity = 0.45 + rng() * 0.35;
+            cloudDensity = 0.65 + rng() * 0.2;
+            gloom = 0.35 + rng() * 0.1;
+            precipitation = 'snow';
+        }
+
+        return { dateKey, type, intensity, cloudDensity, gloom, precipitation };
+    },
+
+    applyWeatherState: function(now) {
+        if (!this.weatherState) return;
+        const currentTime = now || new Date();
+        const body = document.body;
+        body.classList.remove('weather-clear', 'weather-partly', 'weather-overcast', 'weather-rain', 'weather-snow');
+        body.classList.add(`weather-${this.weatherState.type}`);
+
+        this.updateWeatherLighting(currentTime);
+        this.updateCloudElements(this.weatherState.cloudDensity);
+        this.updatePrecipitation(this.weatherState.precipitation, this.weatherState.intensity);
+        this.updateCelestialPositions(currentTime);
+    },
+
+    updateWeatherLighting: function(now) {
+        if (!this.weatherState) return;
+        const mistLayer = document.getElementById('mist-layer');
+        if (!mistLayer) return;
+        const isDay = this.getDayFlagForWeather(now || new Date());
+        const nightBoost = isDay ? 0 : 0.08;
+        const opacity = Math.min(0.75, (this.weatherState.gloom || 0) + nightBoost);
+        mistLayer.style.opacity = opacity.toFixed(2);
+    },
+
+    getDayFlagForWeather: function(now) {
+        if (this.themeMode !== 'auto' && this.lastAppliedTheme) {
+            return this.lastAppliedTheme === 'theme-dawn' || this.lastAppliedTheme === 'theme-beach';
+        }
+        const hours = now.getHours() + now.getMinutes() / 60;
+        return hours >= 6 && hours < 18;
+    },
+
+    updateCloudElements: function(density) {
+        const layer = document.getElementById('cloud-layer');
+        if (!layer) return;
+        const safeDensity = Math.max(0, Math.min(1, density || 0));
+        const count = safeDensity < 0.08 ? 0 : Math.round(8 + safeDensity * 18);
+
+        if (count === 0) {
+            layer.innerHTML = '';
+            this.lastCloudCount = 0;
+            return;
+        }
+        if (this.lastCloudCount === count) return;
+        this.lastCloudCount = count;
+
+        let clouds = '';
+        for (let i = 0; i < count; i++) {
+            const scale = Math.random() * 1.5 + 0.5;
+            const top = Math.random() * 55 + 2;
+            const duration = Math.random() * 80 + 40;
+            const delay = Math.random() * -120;
+            const width = Math.random() * 110 + 60;
+            const animName = ['drift-slow', 'drift', 'drift-fast'][Math.floor(Math.random() * 3)];
+            const opacity = Math.min(0.85, 0.25 + (safeDensity * 0.6) + (Math.random() * 0.15));
+            clouds += `<div class="cloud" style="top:${top}%; transform: scale(${scale}); animation-name:${animName}; animation-duration:${duration}s; animation-delay:${delay}s; width:${width}px; height:${width * 0.3}px; opacity:${opacity};"></div>`;
+        }
+        layer.innerHTML = clouds;
+    },
+
+    updatePrecipitation: function(type, intensity) {
+        const rainLayer = document.getElementById('rain-layer');
+        const snowLayer = document.getElementById('snow-layer');
+
+        if (type !== 'rain' && rainLayer) rainLayer.innerHTML = '';
+        if (type !== 'snow' && snowLayer) snowLayer.innerHTML = '';
+
+        if (type === 'rain') this.renderRaindrops(intensity);
+        if (type === 'snow') this.renderSnowflakes(intensity);
+    },
+
+    renderRaindrops: function(intensity) {
+        const layer = document.getElementById('rain-layer');
+        if (!layer) return;
+        const density = Math.max(0.3, Math.min(1, intensity || 0.6));
+        const count = Math.round(80 + density * 160);
+        let drops = '';
+        for (let i = 0; i < count; i++) {
+            const left = Math.random() * 100;
+            const delay = Math.random() * -2.5;
+            const speed = (0.7 + Math.random() * 0.6) / density;
+            const opacity = 0.3 + Math.random() * 0.6;
+            const height = 10 + Math.random() * 18;
+            drops += `<div class="raindrop" style="left:${left}%; height:${height}px; animation-delay:${delay}s; --rain-speed:${speed.toFixed(2)}s; --rain-opacity:${opacity.toFixed(2)}"></div>`;
+        }
+        layer.innerHTML = drops;
+    },
+
+    renderSnowflakes: function(intensity) {
+        const layer = document.getElementById('snow-layer');
+        if (!layer) return;
+        const density = Math.max(0.25, Math.min(1, intensity || 0.5));
+        const count = Math.round(60 + density * 120);
+        let flakes = '';
+        for (let i = 0; i < count; i++) {
+            const left = Math.random() * 100;
+            const delay = Math.random() * -6;
+            const speed = (4 + Math.random() * 4) / density;
+            const size = 3 + Math.random() * 5;
+            const opacity = 0.5 + Math.random() * 0.4;
+            flakes += `<div class="snowflake" style="left:${left}%; animation-delay:${delay}s; --snow-speed:${speed.toFixed(2)}s; --snow-size:${size.toFixed(1)}px; --snow-opacity:${opacity.toFixed(2)}"></div>`;
+        }
+        layer.innerHTML = flakes;
+    },
+
+    updateCelestialPositions: function(now) {
+        const current = now || new Date();
+        const sun = document.getElementById('sun');
+        const moon = document.getElementById('moon');
+        if (!sun && !moon) return;
+        const hours = current.getHours() + current.getMinutes() / 60;
+
+        let dayProgress = (hours - 6) / 12;
+        dayProgress = Math.max(0, Math.min(1, dayProgress));
+        const sunX = 10 + dayProgress * 80;
+        const sunY = 70 - (Math.sin(dayProgress * Math.PI) * 50);
+        if (sun) {
+            sun.style.left = `${sunX}%`;
+            sun.style.top = `${sunY}%`;
+        }
+
+        let nightHour = hours < 6 ? hours + 24 : hours;
+        let nightProgress = (nightHour - 18) / 12;
+        nightProgress = Math.max(0, Math.min(1, nightProgress));
+        const moonX = 90 - nightProgress * 80;
+        const moonY = 70 - (Math.sin(nightProgress * Math.PI) * 45);
+        if (moon) {
+            moon.style.left = `${moonX}%`;
+            moon.style.top = `${moonY}%`;
+            moon.style.right = 'auto';
+        }
     },
 
     createShootingStar: function() {
@@ -460,24 +691,6 @@ const CozyWebApp = {
         star.style.left = `${Math.random() * 100}%`;
         document.getElementById('dynamic-bg').appendChild(star);
         setTimeout(() => star.remove(), 2000);
-    },
-
-    createCloudElements: function() {
-        if (document.querySelector('.cloud')) return;
-        const bg = document.getElementById('dynamic-bg');
-        let clouds = '';
-        for (let i = 0; i < 5; i++) {
-            const scale = Math.random() * 0.6 + 0.8;
-            const top = Math.random() * 30 + 5;
-            const duration = Math.random() * 50 + 80;
-            const delay = Math.random() * -80;
-            clouds += `<div class="cloud" style="top:${top}%; transform: scale(${scale}); animation-duration:${duration}s; animation-delay:${delay}s; width: 100px; height: 30px;"></div>`;
-        }
-        bg.insertAdjacentHTML('beforeend', clouds);
-    },
-
-    removeCloudElements: function() {
-        document.querySelectorAll('.cloud').forEach(c => c.remove());
     },
 
     updateMoonPhase: function() {
@@ -740,72 +953,6 @@ const CozyWebApp = {
         document.getElementById('alarm-sound').innerHTML = options;
     },
 
-    handleAmbientGridClick: function(e) {
-        const card = e.target.closest('.sound-card');
-        const optionsBtn = e.target.closest('.sound-options-btn');
-        const menu = e.target.closest('.sound-options-menu');
-        if (optionsBtn) { 
-            e.stopPropagation(); 
-            this.toggleSoundOptionsMenu(optionsBtn); 
-            return; 
-        }
-        if (menu) { 
-            e.stopPropagation(); 
-            this.handleSoundMenuAction(e.target); 
-            return; 
-        }
-        if (card) {
-            if (card.id === 'add-sound-card') {
-                document.getElementById('add-sound-choice-modal').classList.remove('hidden');
-            } else {
-                this.toggleAmbientSound(card.dataset.soundKey);
-            }
-        }
-    },
-    
-    renderAmbientSoundGrid: async function() {
-        const gridEl = document.getElementById('ambient-sounds-grid');
-        const userSounds = await this.db.userSounds.toArray();
-        const hiddenSettings = await this.db.settings.get("hiddenDefaultSounds") || { value: [] };
-        const hiddenKeys = hiddenSettings.value;
-        let html = '';
-
-        for (const key in this.ambientSoundFiles) {
-            if (hiddenKeys.includes(key)) continue;
-            const sound = this.ambientSoundFiles[key];
-            html += `<div class="sound-card" data-sound-key="default-${key}">
-                        <div class="sound-card-icon"><i class="${sound.icon}"></i></div>
-                        <h4 class="sound-card-name">${this.getText(sound.name_key)}</h4>
-                        <button class="sound-options-btn"><i class="fas fa-ellipsis-v"></i></button>
-                        <div class="sound-options-menu" data-key="${key}">
-                            <button data-action="hide" class="text-gray-400"><i class="fas fa-eye-slash fa-fw mr-2"></i>${this.getText('sound_option_hide')}</button>
-                        </div>
-                    </div>`;
-        }
-        
-        userSounds.forEach(sound => {
-            const icon = sound.type === 'youtube' ? 'fab fa-youtube' : (sound.icon || 'fas fa-music');
-            const favClass = sound.isFavorite ? "favorited" : "";
-            const isYT = sound.type === 'youtube' ? ' is-youtube' : '';
-            html += `<div class="sound-card${isYT}" data-sound-key="user-${sound.id}">
-                        <div class="sound-card-icon"><i class="${icon}"></i></div>
-                        <h4 class="sound-card-name">${sound.name}</h4>
-                        <button class="sound-options-btn"><i class="fas fa-ellipsis-v"></i></button>
-                        <div class="sound-options-menu" data-id="${sound.id}">
-                            <button data-action="edit"><i class="fas fa-edit fa-fw mr-2"></i>${this.getText('sound_option_edit')}</button>
-                            <button data-action="favorite"><i class="fas fa-star fa-fw mr-2 favorite-star ${favClass}"></i>${this.getText('sound_option_favorite')}</button>
-                            <button data-action="delete" class="text-red-400"><i class="fas fa-trash fa-fw mr-2"></i>${this.getText('sound_option_delete')}</button>
-                        </div>
-                     </div>`;
-        });
-
-        html += `<div id="add-sound-card" class="sound-card">
-                    <div class="sound-card-icon"><i class="fas fa-plus"></i></div>
-                    <h4 class="sound-card-name">${this.getText('sound_card_add')}</h4>
-                 </div>`;
-        gridEl.innerHTML = html;
-    },
-
     // --- Stats Tracking ---
     initStats: async function() {
         let stats = await this.db.settings.get('userStats');
@@ -814,27 +961,6 @@ const CozyWebApp = {
             await this.db.settings.put(stats);
         }
         stats.value.sessions++;
-        await this.db.settings.put(stats);
-        this.renderPersonalStats();
-        this.startChillingTracker();
-    },
-
-    startChillingTracker: function() {
-        if (this.chillingTimeTracker) clearInterval(this.chillingTimeTracker);
-        this.chillingTimeTracker = setInterval(async () => {
-            const player = document.getElementById('ambient-player');
-            if (player && !player.paused) {
-                let stats = await this.db.settings.get('userStats');
-                stats.value.totalChillingTime++;
-                await this.db.settings.put(stats);
-                this.renderPersonalStats();
-            }
-        }, 1000); 
-    },
-    
-    updateSoundPlayCount: async function(soundKey) {
-        let stats = await this.db.settings.get('userStats');
-        stats.value.soundPlays[soundKey] = (stats.value.soundPlays[soundKey] || 0) + 1;
         await this.db.settings.put(stats);
         this.renderPersonalStats();
     },
@@ -866,75 +992,6 @@ const CozyWebApp = {
         document.getElementById('personal-favorite-sound').textContent = favSound;
     },
 
-    toggleSoundOptionsMenu: function(button) {
-        const menu = button.nextElementSibling;
-        document.querySelectorAll('.sound-options-menu').forEach(m => {
-            if (m !== menu) m.style.display = 'none';
-        });
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    },
-
-    handleSoundMenuAction: async function(target) {
-        const action = target.dataset.action;
-        const menu = target.closest('.sound-options-menu');
-        const idOrKey = menu.dataset.id || menu.dataset.key;
-        if (!action || !idOrKey) return;
-
-        if (action === 'edit') {
-            const sound = await this.db.userSounds.get(parseInt(idOrKey));
-            if (sound) this.openEditSoundModal(sound);
-        } else if (action === 'delete') {
-            if (confirm(this.getText('confirm_delete_sound'))) {
-                await this.deleteUserSound(parseInt(idOrKey));
-            }
-        } else if (action === 'favorite') {
-            await this.toggleFavoriteStatus(parseInt(idOrKey), target.querySelector('.favorite-star'));
-        } else if (action === 'hide') {
-            await this.hideDefaultSound(idOrKey);
-        }
-        menu.style.display = 'none';
-    },
-
-    hideDefaultSound: async function(soundKey) {
-        let settings = await this.db.settings.get('hiddenDefaultSounds') || { key: 'hiddenDefaultSounds', value: [] };
-        if (!settings.value.includes(soundKey)) {
-            settings.value.push(soundKey);
-            await this.db.settings.put(settings);
-            this.renderAmbientSoundGrid();
-        }
-    },
-
-    unhideDefaultSound: async function(soundKey) {
-        let settings = await this.db.settings.get('hiddenDefaultSounds');
-        if (settings && settings.value) {
-            settings.value = settings.value.filter(key => key !== soundKey);
-            await this.db.settings.put(settings);
-            this.renderAmbientSoundGrid();
-            this.renderHiddenSoundsList();
-        }
-    },
-
-    openRestoreSoundsModal: async function() {
-        await this.renderHiddenSoundsList();
-        document.getElementById('restore-sounds-modal').classList.remove('hidden');
-    },
-
-    renderHiddenSoundsList: async function() {
-        const listEl = document.getElementById('hidden-sounds-list');
-        const hidden = (await this.db.settings.get('hiddenDefaultSounds') || { value: [] }).value;
-        if (hidden.length === 0) {
-            listEl.innerHTML = `<p class="text-gray-400 text-center">${this.getText('restore_sound_empty')}</p>`;
-            return;
-        }
-        listEl.innerHTML = hidden.map(key => {
-            const sound = this.ambientSoundFiles[key];
-            return sound ? `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
-                                <span class="flex items-center"><i class="${sound.icon} fa-fw mr-3"></i>${this.getText(sound.name_key)}</span>
-                                <button data-sound-key="${key}" class="unhide-sound-btn text-cyan-400 hover:text-cyan-300 font-bold text-sm">${this.getText('restore_sound_unhide')}</button>
-                            </div>` : '';
-        }).join('');
-    },
-    
     openEditSoundModal: function(sound) {
         this.currentEditingSound = sound;
         document.getElementById('edit-sound-id').value = sound.id;
@@ -951,7 +1008,7 @@ const CozyWebApp = {
         if (id && name) {
             await this.db.userSounds.update(id, { name, icon });
             document.getElementById('edit-sound-modal').classList.add('hidden');
-            this.renderAmbientSoundGrid();
+
             this.renderSoundList();
         }
     },
@@ -967,9 +1024,7 @@ const CozyWebApp = {
     },
 
     deleteUserSound: async function(id) {
-        if (this.activeSoundKey === `user-${id}`) this.hideAudioPlayer();
         await this.db.userSounds.delete(id);
-        this.renderAmbientSoundGrid();
         this.renderSoundList();
     },
 
@@ -986,7 +1041,6 @@ const CozyWebApp = {
                     try {
                         const soundData = { name: file.name.replace(/\.[^/.]+$/, ""), icon: '🎵', isFavorite: false, type: 'upload', data: new Blob([e.target.result], { type: file.type }) };
                         const id = await this.db.userSounds.add(soundData);
-                        this.renderAmbientSoundGrid();
                         this.renderSoundList();
                         this.openEditSoundModal({ ...soundData, id });
                     } catch (err) { console.error("Error saving sound:", err); }
@@ -1019,7 +1073,6 @@ const CozyWebApp = {
         
         const soundData = { name: `YouTube - ${videoID}`, icon: 'fab fa-youtube', isFavorite: false, type: 'youtube', youtubeId: videoID };
         const id = await this.db.userSounds.add(soundData);
-        this.renderAmbientSoundGrid();
         this.renderSoundList();
         
         document.getElementById('add-youtube-modal').classList.add('hidden');
@@ -1054,54 +1107,18 @@ const CozyWebApp = {
         this.lastAppliedTheme = themeName;
         document.body.className = '';
         document.body.classList.add(themeName, 'loading');
-        
-        this.removeCloudElements();
-        if (themeName === 'theme-beach' || themeName === 'theme-dawn') this.createCloudElements();
-        
+
         document.querySelectorAll('.theme-card').forEach(card => {
             const activeTheme = this.themeMode === 'auto' ? 'theme-auto' : this.lastManualTheme;
             card.classList.toggle('active', card.dataset.theme === activeTheme);
         });
-        
-        this.updateCelestialBodies();
+
+        const isNightTheme = themeName === 'theme-default' || themeName === 'theme-sunset';
+        if (isNightTheme) this.updateMoonPhase();
+        this.updateCelestialPositions(new Date());
         this.updateNightEffects();
+        if (this.weatherState) this.applyWeatherState(new Date());
         setTimeout(() => document.body.classList.remove('loading'), 10);
-    },
-
-    updateCelestialBodies: function() {
-        const sun = document.getElementById('sun');
-        const moon = document.getElementById('moon');
-        const hour = new Date().getHours() + new Date().getMinutes() / 60;
-
-        if (this.themeMode === 'manual') {
-            const currentTheme = this.lastManualTheme;
-            sun.style.display = (currentTheme === 'theme-beach' || currentTheme === 'theme-dawn') ? 'block' : 'none';
-            moon.style.display = (currentTheme === 'theme-sunset' || currentTheme === 'theme-default') ? 'block' : 'none';
-            if (moon.style.display === 'block') this.updateMoonPhase();
-            return;
-        }
-
-        const dayProgress = (hour - 4) / 16;
-        if (dayProgress >= 0 && dayProgress <= 1) {
-            sun.style.left = `calc(${dayProgress * 100}% - 50px)`;
-            sun.style.top = `${50 - Math.sin(dayProgress * Math.PI) * 45}%`;
-            sun.style.display = 'block';
-        } else {
-            sun.style.display = 'none';
-        }
-        
-        let nightProgress = -1;
-        if (hour >= 20) nightProgress = (hour - 20) / 8;
-        else if (hour < 4) nightProgress = (hour + 24 - 20) / 8;
-        
-        if (nightProgress >= 0 && nightProgress <= 1) {
-            moon.style.left = `calc(${nightProgress * 100}% - 50px)`;
-            moon.style.top = `${50 - Math.sin(nightProgress * Math.PI) * 45}%`;
-            moon.style.display = 'block';
-            this.updateMoonPhase();
-        } else {
-            moon.style.display = 'none';
-        }
     },
 
     updateNightEffects: function() {
@@ -1120,6 +1137,7 @@ const CozyWebApp = {
     updateClock: function() {
         document.getElementById('clock').textContent = new Date().toLocaleTimeString(this.currentLanguage);
         this.applyThemeBasedOnMode();
+        this.refreshWeather(new Date());
     },
 
     saveSettings: async function() {
@@ -1127,108 +1145,75 @@ const CozyWebApp = {
         await this.db.settings.put({ key: 'lastManualTheme', value: this.lastManualTheme });
     },
 
-    toggleAmbientSound: async function(soundKey) {
-        const player = document.getElementById('ambient-player');
-        
-        if (soundKey.startsWith('user-')) {
-            const soundId = parseInt(soundKey.replace('user-', ''));
-            const sound = await this.db.userSounds.get(soundId);
-            if (sound && sound.type === 'youtube') {
-                this.hideAudioPlayer();
-                document.getElementById('youtube-player-wrapper').classList.remove('hidden');
-                this.ytPlayer.loadVideoById(sound.youtubeId);
-                this.ytPlayer.playVideo();
-                return;
-            }
-        }
-        
-        document.getElementById('youtube-player-wrapper').classList.add('hidden');
-        if(this.ytPlayer && this.ytPlayer.stopVideo) this.ytPlayer.stopVideo();
-
-        if (this.activeSoundKey === soundKey && !player.paused) {
-            this.hideAudioPlayer();
-            return;
-        }
-        if (player.src.startsWith('blob:')) URL.revokeObjectURL(player.src);
-
-        let soundInfo = {};
-        if (soundKey.startsWith('default-')) {
-            soundInfo = this.ambientSoundFiles[soundKey.replace('default-', '')];
+    // --- Breathing Exercise ---
+    toggleBreathingExercise: function() {
+        if (this.breathingActive) {
+            this.stopBreathingExercise();
         } else {
-            const userSound = await this.db.userSounds.get(parseInt(soundKey.replace('user-', '')));
-            if(userSound) soundInfo = { name: userSound.name, url: URL.createObjectURL(userSound.data) };
-        }
-        
-        if (soundInfo.url) {
-            this.activeSoundKey = soundKey;
-            player.src = soundInfo.url;
-            player.play().catch(console.error);
-            this.updatePlayerUI();
-            this.updateSoundPlayCount(soundKey);
+            this.startBreathingCycle();
         }
     },
 
-    hideAudioPlayer: function() {
-        const player = document.getElementById('ambient-player');
-        if (player.src.startsWith('blob:')) URL.revokeObjectURL(player.src);
-        player.pause();
-        player.src = '';
-        this.activeSoundKey = null;
-        this.updatePlayerUI();
-    },
+    startBreathingCycle: function() {
+        if (this.breathingInterval) return;
+        this.breathingActive = true;
+        this.breathingPhase = 'inhale';
+        this.breathingTime = this.breathingPattern.inhale;
+        this.updateBreathingDisplay();
+        const btn = document.getElementById('breathing-toggle-btn');
+        btn.textContent = this.getText('breathing_stop_btn');
+        btn.classList.add('active');
 
-    toggleAmbientSoundPlayback: function() {
-        const player = document.getElementById('ambient-player');
-        if (player.src) {
-            player.paused ? player.play() : player.pause();
-        }
-    },
-
-    formatTime: function(seconds) {
-        if (isNaN(seconds)) return "0:00";
-        const min = Math.floor(seconds / 60);
-        const sec = Math.floor(seconds % 60);
-        return `${min}:${String(sec).padStart(2, '0')}`;
-    },
-
-    updateSeekSlider: function() {
-        const player = document.getElementById('ambient-player');
-        const seekSlider = document.getElementById('player-seek-slider');
-        const currentTimeEl = document.getElementById('player-current-time');
-        const totalTimeEl = document.getElementById('player-total-time');
-
-        if (isNaN(player.duration)) return;
-
-        seekSlider.max = player.duration;
-        seekSlider.value = player.currentTime;
-        currentTimeEl.textContent = this.formatTime(player.currentTime);
-        totalTimeEl.textContent = this.formatTime(player.duration);
-    },
-
-    updatePlayerUI: async function() {
-        const player = document.getElementById('ambient-player');
-        const soundNameEl = document.getElementById('current-sound-name');
-        const isPlaying = this.activeSoundKey !== null && !player.paused;
-
-        document.getElementById('audio-player-container').classList.toggle('show', this.activeSoundKey !== null);
-        document.getElementById('player-play-icon').classList.toggle('hidden', isPlaying);
-        document.getElementById('player-pause-icon').classList.toggle('hidden', !isPlaying);
-        document.querySelectorAll('.sound-card').forEach(card => card.classList.remove('playing'));
-
-        if (this.activeSoundKey) {
-            if(isPlaying) document.querySelector(`.sound-card[data-sound-key="${this.activeSoundKey}"]`)?.classList.add('playing');
-            const key = this.activeSoundKey;
-            if (key.startsWith('default-')) {
-                soundNameEl.textContent = this.getText(this.ambientSoundFiles[key.replace('default-', '')]?.name_key) || '...';
-            } else {
-                const sound = await this.db.userSounds.get(parseInt(key.replace('user-', '')));
-                soundNameEl.textContent = sound?.name || '...';
+        this.breathingInterval = setInterval(() => {
+            this.breathingTime--;
+            this.updateBreathingDisplay();
+            if (this.breathingTime <= 0) {
+                if (this.breathingPhase === 'inhale') {
+                    this.breathingPhase = 'hold';
+                    this.breathingTime = this.breathingPattern.hold;
+                } else if (this.breathingPhase === 'hold') {
+                    this.breathingPhase = 'exhale';
+                    this.breathingTime = this.breathingPattern.exhale;
+                } else {
+                    this.breathingPhase = 'inhale';
+                    this.breathingTime = this.breathingPattern.inhale;
+                }
+                this.updateBreathingDisplay();
             }
-        } else {
-            soundNameEl.textContent = this.getText('player_default_name');
-            document.getElementById('player-current-time').textContent = "0:00";
-            document.getElementById('player-total-time').textContent = "0:00";
-            document.getElementById('player-seek-slider').value = 0;
+        }, 1000);
+    },
+
+    stopBreathingExercise: function() {
+        clearInterval(this.breathingInterval);
+        this.breathingInterval = null;
+        this.breathingActive = false;
+        this.breathingPhase = 'inhale';
+        this.breathingTime = this.breathingPattern.inhale;
+        this.updateBreathingDisplay();
+        const btn = document.getElementById('breathing-toggle-btn');
+        btn.textContent = this.getText('breathing_start_btn');
+        btn.classList.remove('active');
+    },
+
+    updateBreathingDisplay: function() {
+        const circle = document.getElementById('breathing-circle');
+        const inner = circle?.querySelector('.breathing-circle-inner');
+        const phaseEl = document.getElementById('breathing-phase-text');
+        const timerEl = document.getElementById('breathing-timer');
+
+        if (phaseEl) {
+            const phaseKey = this.breathingPhase === 'inhale' ? 'breathing_inhale' :
+                             this.breathingPhase === 'hold' ? 'breathing_hold' : 'breathing_exhale';
+            phaseEl.textContent = this.getText(phaseKey);
+        }
+        if (timerEl) timerEl.textContent = this.breathingTime;
+
+        if (circle) {
+            circle.classList.remove('phase-inhale', 'phase-hold', 'phase-exhale');
+            circle.classList.add(`phase-${this.breathingPhase}`);
+        }
+        if (inner) {
+            inner.classList.toggle('expand', this.breathingPhase === 'inhale' || this.breathingPhase === 'hold');
         }
     }
 };

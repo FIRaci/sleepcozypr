@@ -22,7 +22,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-default loading">
-    <div id="dynamic-bg" class="bg-gradient"><div id="sun"></div><div id="moon"><div class="moon-phase-overlay"></div></div></div>
+    <div id="dynamic-bg" class="bg-gradient">
+        <div id="sun"></div>
+        <div id="moon"><div class="moon-phase-overlay"></div></div>
+        <div id="weather-layer">
+            <div id="cloud-layer"></div>
+            <div id="rain-layer"></div>
+            <div id="snow-layer"></div>
+            <div id="mist-layer"></div>
+        </div>
+    </div>
 
     <header>
         <nav class="w-full h-full px-6 flex justify-between items-center">
@@ -32,7 +41,7 @@
                 <a href="#features" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_features">Features</a>
                 <a href="#experience" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_experience">Experience</a>
                 <a href="#library" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_library">Library</a>
-                <a href="#stats" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_community">Community</a>
+
                 <a href="#about" class="nav-link text-white hover:text-yellow-300" data-i18n-key="nav_about">About</a>
                 <!-- Language Switcher -->
                 <div id="language-switcher" class="relative">
@@ -55,7 +64,7 @@
             <a href="#features" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_features">Features</a>
             <a href="#experience" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_experience">Experience</a>
             <a href="#library" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_library">Library</a>
-            <a href="#stats" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_community">Community</a>
+
             <a href="#about" class="nav-link-mobile block py-2 px-6 text-sm text-white hover:bg-gray-700/50" data-i18n-key="nav_about">About</a>
         </div>
     </header>
@@ -78,7 +87,7 @@
                 <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="features_subtitle">Những công cụ được thiết kế để nâng niu giấc ngủ và tối ưu hóa sự thư giãn của bạn.</p>
                 <div class="grid md:grid-cols-3 gap-8">
                     <div class="feature-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-brain text-5xl text-purple-300"></i></div><h3 class="text-2xl font-bold mb-2" data-i18n-key="feature_ai_title">Trợ lý AI Thông Minh</h3><p class="text-gray-400" data-i18n-key="feature_ai_desc">Tự động đặt lịch báo thức ngủ từ mô tả lịch trình của bạn bằng ngôn ngữ tự nhiên.</p></div>
-                    <div class="feature-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-music text-5xl text-cyan-300"></i></div><h3 class="text-2xl font-bold mb-2" data-i18n-key="feature_sound_title">Thư viện Âm thanh</h3><p class="text-gray-400" data-i18n-key="feature_sound_desc">Tạo bộ sưu tập âm thanh của riêng bạn, từ mặc định đến cá nhân, và đánh dấu yêu thích.</p></div>
+                    <div class="feature-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-music text-5xl text-cyan-300"></i></div><h3 class="text-2xl font-bold mb-2" data-i18n-key="feature_chill_title">Thư viện Âm thanh</h3><p class="text-gray-400" data-i18n-key="feature_chill_desc">Tạo bộ sưu tập âm thanh của riêng bạn, từ mặc định đến cá nhân, và đánh dấu yêu thích.</p></div>
                     <div class="feature-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-sync-alt text-5xl text-yellow-300"></i></div><h3 class="text-2xl font-bold mb-2" data-i18n-key="feature_cycle_title">Chu kỳ Ngày-Đêm</h3><p class="text-gray-400" data-i18n-key="feature_cycle_desc">Trải nghiệm không gian thay đổi tự động từ bình minh, ban ngày, hoàng hôn đến ban đêm.</p></div>
                 </div>
             </div>
@@ -117,17 +126,7 @@
             </div>
         </section>
 
-        <section id="stats" class="section">
-            <div class="container mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4" data-i18n-key="community_title">Cộng đồng Chill Cùng Nhau</h2>
-                <p class="text-gray-300 max-w-2xl mx-auto mb-12" data-i18n-key="community_subtitle">Mỗi khoảnh khắc thư giãn của bạn góp phần tạo nên một không gian yên bình chung.</p>
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-users text-5xl text-purple-300"></i></div><h3 id="global-users" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_users">Tâm hồn đồng điệu</p></div>
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-headphones-alt text-5xl text-cyan-300"></i></div><h3 id="global-hours" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_hours">Giờ đã thư giãn</p></div>
-                    <div class="stats-card rounded-xl p-8 text-center"><div class="flex justify-center mb-4"><i class="fas fa-mouse-pointer text-5xl text-yellow-300"></i></div><h3 id="global-visits" class="text-4xl font-bold mb-2">0</h3><p class="text-gray-400" data-i18n-key="stats_global_visits">Lượt ghé thăm</p></div>
-                </div>
-            </div>
-        </section>
+
         
         <section id="about" class="section bg-black bg-opacity-20">
             <div class="container mx-auto text-center">
@@ -179,8 +178,24 @@
                 <div class="swiper-slide"><div class="w-full text-white"><h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_sounds_title">Âm thanh Báo thức</h2><button id="open-add-sound-choice-modal" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg mb-4 transition-colors" data-i18n-key="sounds_upload_btn">Tải lên Âm thanh mới</button><div id="sound-list" class="space-y-3 w-full"></div></div></div>
                 <!-- Tab 3: Tips -->
                 <div class="swiper-slide"><div class="w-full text-white"><h2 class="text-2xl font-semibold mb-6 text-center" data-i18n-key="sidebar_tips_title">Mẹo cho Giấc ngủ</h2><div id="tips-list" class="space-y-4 text-gray-300 w-full"></div></div></div>
-                <!-- Tab 4: Space -->
-                <div class="swiper-slide"><div class="w-full text-white flex flex-col h-full"><div class="flex justify-between items-center mb-6 flex-shrink-0"><h2 class="text-2xl font-semibold text-center flex-grow" data-i18n-key="sidebar_space_title">Không Gian Thư Giãn</h2><button id="restore-sounds-btn" class="text-gray-400 hover:text-white transition-colors" data-i18n-key-title="space_restore_btn_title"><i class="fas fa-undo-alt"></i></button></div><div id="ambient-sounds-grid" class="grid grid-cols-2 gap-4 overflow-y-auto flex-grow p-1"></div></div></div>
+                <!-- Tab 4: Chill & Heal -->
+                <div class="swiper-slide">
+                    <div class="w-full text-white flex flex-col h-full items-center">
+                        <h2 class="text-2xl font-semibold mb-6 text-center flex-shrink-0" data-i18n-key="sidebar_chill_title">Chill & Heal</h2>
+                        <div class="flex-grow flex flex-col items-center justify-center w-full px-4">
+                            <div class="breathing-container">
+                                <div id="breathing-circle" class="breathing-circle">
+                                    <div class="breathing-circle-inner"></div>
+                                </div>
+                                <div class="breathing-phase text-center mt-4">
+                                    <span id="breathing-phase-text" class="text-xl font-semibold" data-i18n-key="breathing_inhale">Hít vào</span>
+                                    <span id="breathing-timer" class="text-lg mt-1 block">4</span>
+                                </div>
+                            </div>
+                            <button id="breathing-toggle-btn" class="breathing-start-btn mt-8 w-48 text-lg font-bold py-3 px-8 rounded-full uppercase">Bắt đầu</button>
+                        </div>
+                    </div>
+                </div>
                 <!-- Tab 5: Stats -->
                 <div class="swiper-slide">
                     <div class="w-full text-white">
@@ -208,13 +223,13 @@
             <button class="tab-nav-button" data-slide="1" data-i18n-key-title="nav_tab_schedule"><i class="fas fa-calendar-alt"></i></button>
             <button class="tab-nav-button" data-slide="2" data-i18n-key-title="nav_tab_sounds"><i class="fas fa-music"></i></button>
             <button class="tab-nav-button" data-slide="3" data-i18n-key-title="nav_tab_tips"><i class="fas fa-lightbulb"></i></button>
-            <button class="tab-nav-button" data-slide="4" data-i18n-key-title="nav_tab_space"><i class="fas fa-headphones-alt"></i></button>
+            <button class="tab-nav-button" data-slide="4" data-i18n-key-title="nav_tab_chill"><i class="fas fa-heart"></i></button>
             <button class="tab-nav-button" data-slide="5" data-i18n-key-title="nav_tab_stats"><i class="fas fa-chart-line"></i></button>
             <button class="tab-nav-button" data-slide="6" data-i18n-key-title="nav_tab_ai"><i class="fas fa-robot"></i></button>
         </div>
     </div>
     
-    <audio id="alarm-audio-player"></audio><audio id="ambient-player" loop></audio>
+    <audio id="alarm-audio-player"></audio>
 
     <!-- Modals and Popovers -->
     <div id="alarm-fired-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-3xl font-bold text-yellow-300 mb-2" data-i18n-key="alarm_fired_title">Đến giờ rồi!</h3><p id="fired-alarm-label" class="text-xl text-white mb-4" data-i18n-key="alarm_fired_subtitle">Dậy thôi nào!</p><div class="bg-gray-700/50 p-4 rounded-lg mb-6"><h4 class="font-semibold text-yellow-400 mb-2" data-i18n-key="alarm_fired_tip_title">Mẹo hay cho bạn:</h4><p id="tip-content" class="text-gray-300"></p></div><button id="dismiss-alarm-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-colors" data-i18n-key="alarm_fired_dismiss">Tắt báo thức</button></div></div></div>
@@ -222,33 +237,9 @@
     <div id="pomodoro-end-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 id="pomodoro-end-title" class="text-3xl font-bold text-yellow-300 mb-2" data-i18n-key="pomodoro_end_title">Hết giờ!</h3><p id="pomodoro-end-subtitle" class="text-xl text-white mb-4"></p><div class="bg-gray-700/50 p-4 rounded-lg mb-6"><h4 class="font-semibold text-yellow-400 mb-2" data-i18n-key="alarm_fired_tip_title">Mẹo hay cho bạn:</h4><p id="pomodoro-tip-content" class="text-gray-300"></p></div><button id="dismiss-pomodoro-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-colors" data-i18n-key="pomodoro_end_dismiss">OK, Bắt đầu phiên tiếp theo</button></div></div></div>
 
     <div id="edit-sound-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="edit_sound_title">Chỉnh sửa Âm thanh</h3><form id="edit-sound-form" class="space-y-4"><input type="hidden" id="edit-sound-id"><div><label for="edit-sound-name" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="edit_sound_name">Tên Âm thanh</label><input type="text" id="edit-sound-name" class="form-input" required></div><div><label for="edit-sound-icon" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="edit_sound_icon">Icon</label><input type="text" id="edit-sound-icon" class="form-input" data-i18n-key-placeholder="edit_sound_icon_placeholder"><p class="text-xs text-gray-500 mt-1" data-i18n-key="edit_sound_icon_desc">Dán emoji hoặc class của Font Awesome.</p></div><div class="flex justify-end space-x-4 pt-4"><button type="button" class="btn-modal-secondary" data-modal-close="edit-sound-modal" data-i18n-key="btn_cancel">Hủy</button><button type="submit" class="btn-modal-primary" data-i18n-key="btn_save">Lưu</button></div></form></div></div></div>
-    <div id="restore-sounds-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-semibold text-white text-center" data-i18n-key="restore_sound_title">Âm thanh đã ẩn</h3><button data-modal-close="restore-sounds-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div id="hidden-sounds-list" class="space-y-3 max-h-64 overflow-y-auto"></div></div></div></div>
     <div id="add-sound-choice-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="add_sound_title">Thêm Âm thanh mới</h3><div class="flex flex-col space-y-4"><button id="add-sound-upload-btn" class="btn-modal-primary"><i class="fas fa-upload mr-2"></i><span data-i18n-key="add_sound_from_file">Tải lên từ thiết bị</span></button><button id="add-sound-youtube-btn" class="btn-modal-secondary"><i class="fab fa-youtube mr-2"></i><span data-i18n-key="add_sound_from_yt">Thêm từ link YouTube</span></button></div></div></div></div>
     <div id="add-youtube-modal" class="fixed-modal hidden"><div class="modal-content-wrapper"><div class="modal-content"><h3 class="text-2xl font-semibold text-white mb-6 text-center" data-i18n-key="add_yt_title">Thêm nhạc từ YouTube</h3><form id="youtube-link-form" class="space-y-4"><label for="youtube-url-input" class="block mb-2 text-sm font-medium text-gray-400" data-i18n-key="add_yt_input_label">Dán link video YouTube vào đây</label><input type="url" id="youtube-url-input" class="form-input" required data-i18n-key-placeholder="add_yt_placeholder"><div id="youtube-error" class="text-red-400 text-sm mt-2 hidden"></div><div class="flex justify-end space-x-4 pt-4"><button type="button" class="btn-modal-secondary" data-modal-close="add-youtube-modal" data-i18n-key="btn_cancel">Hủy</button><button type="submit" class="btn-modal-primary" data-i18n-key="btn_add">Thêm</button></div></form></div></div></div>
-    
     <div id="youtube-player-wrapper" class="fixed-modal bg-black/80 hidden"><div id="youtube-player"></div><button id="close-youtube-player" class="absolute top-4 right-4 text-white text-3xl">&times;</button></div>
-
-    <div id="audio-player-container" class="audio-player-container p-4 border-t border-gray-700/50">
-        <div class="container mx-auto flex items-center justify-between text-white space-x-4">
-            <div class="flex items-center space-x-3 w-1/4">
-                <button id="player-play-pause-btn" class="p-2 rounded-full bg-yellow-400 text-gray-900 flex-shrink-0" aria-label="Play or pause">
-                    <i id="player-play-icon" class="fas fa-play text-lg"></i>
-                    <i id="player-pause-icon" class="fas fa-pause text-lg hidden"></i>
-                </button>
-                <div><p id="current-sound-name" class="font-semibold truncate" data-i18n-key="player_default_name">Chọn một không gian</p></div>
-            </div>
-            <div class="w-1/2 flex items-center justify-center space-x-3">
-                <span id="player-current-time" class="text-sm w-12 text-right">0:00</span>
-                <input type="range" id="player-seek-slider" min="0" max="100" value="0" class="w-full" aria-label="Seek slider">
-                <span id="player-total-time" class="text-sm w-12">0:00</span>
-            </div>
-            <div class="w-1/4 flex items-center justify-end space-x-3">
-                <i class="fas fa-volume-up"></i>
-                <input type="range" id="player-volume-slider" min="0" max="1" step="0.01" value="1" class="w-24" aria-label="Volume control">
-                <button id="player-close-btn" class="player-close-btn text-gray-400 hover:text-white" aria-label="Close player"><i class="fas fa-times fa-lg"></i></button>
-            </div>
-        </div>
-    </div>
     
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="translation.js" defer></script> 
