@@ -432,7 +432,7 @@ const CozyWebApp = {
         const bg = document.getElementById('dynamic-bg');
         let stars = '';
         const starTypes = ['warm', 'cool', 'bright'];
-        for (let i = 0; i < 80; i++) {
+        for (let i = 0; i < 50; i++) {
             const size = Math.random() * 4 + 1;
             const top = Math.random() * 100;
             const left = Math.random() * 100;
@@ -587,7 +587,7 @@ const CozyWebApp = {
         const layer = document.getElementById('cloud-layer');
         if (!layer) return;
         const safeDensity = Math.max(0, Math.min(1, density || 0));
-        const count = safeDensity < 0.08 ? 0 : Math.round(8 + safeDensity * 18);
+        const count = safeDensity < 0.08 ? 0 : Math.round(2 + safeDensity * 6);
 
         if (count === 0) {
             layer.innerHTML = '';
@@ -626,7 +626,7 @@ const CozyWebApp = {
         const layer = document.getElementById('rain-layer');
         if (!layer) return;
         const density = Math.max(0.3, Math.min(1, intensity || 0.6));
-        const count = Math.round(50 + density * 100);
+        const count = Math.round(15 + density * 25);
         let drops = '';
         for (let i = 0; i < count; i++) {
             const left = Math.random() * 100;
@@ -643,7 +643,7 @@ const CozyWebApp = {
         const layer = document.getElementById('snow-layer');
         if (!layer) return;
         const density = Math.max(0.25, Math.min(1, intensity || 0.5));
-        const count = Math.round(40 + density * 80);
+        const count = Math.round(10 + density * 20);
         let flakes = '';
         for (let i = 0; i < count; i++) {
             const left = Math.random() * 100;
@@ -1127,7 +1127,7 @@ const CozyWebApp = {
         const isNightTheme = this.lastAppliedTheme === 'theme-default' || this.lastAppliedTheme === 'theme-sunset';
         const isDeepNight = hour >= 23 || hour < 3;
         if (isNightTheme) {
-            this.shootingStarInterval = setInterval(() => this.createShootingStar(), isDeepNight ? 3000 : 6000);
+            this.shootingStarInterval = setInterval(() => this.createShootingStar(), isDeepNight ? 8000 : 15000);
             document.body.classList.toggle('deep-night', isDeepNight);
         } else {
             document.body.classList.remove('deep-night');

@@ -98,8 +98,8 @@ body.deep-night .star { animation-duration: calc(var(--twinkle-duration, 4s) * 0
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    transition: background-color 0.8s ease-in-out, box-shadow 0.8s ease-in-out, opacity 0.5s, top 0.2s linear, left 0.2s linear;
-    will-change: top, left, opacity;
+    transition: background-color 0.8s ease-in-out, box-shadow 0.8s ease-in-out, opacity 0.5s;
+    will-change: opacity;
     display: none;
     z-index: 1;
 }
@@ -142,12 +142,14 @@ body.deep-night .star { animation-duration: calc(var(--twinkle-duration, 4s) * 0
     pointer-events: none;
 }
 
-#weather-layer { z-index: 2; }
-#cloud-layer { z-index: 2; filter: blur(0.3px); }
+#weather-layer { z-index: 2; contain: paint; }
+#cloud-layer { z-index: 2; filter: blur(0.3px); contain: paint; will-change: transform; }
 #rain-layer, #snow-layer {
     z-index: 3;
     opacity: 0;
     transition: opacity 0.8s ease;
+    contain: paint;
+    will-change: transform;
 }
 #mist-layer {
     z-index: 4;
@@ -270,27 +272,19 @@ header { position: fixed; top: 0; left: 0; width: 100%; z-index: 30; background:
 /* --- Sections --- */
 .section { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; padding-top: var(--header-height); }
 #home { padding-top: 80px; }
+#features, #experience, #library, #about { content-visibility: auto; contain-intrinsic-size: 100vh; }
 
 /* --- Cards Styling & Performance --- */
-.feature-card, .pomodoro-card, header, .sidebar-container .swiper-slide, .tab-nav {
+.feature-card, .pomodoro-card {
     background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.feature-card, .pomodoro-card, header, .sidebar-container .swiper-slide, .tab-nav {
     will-change: transform;
     transform: translateZ(0);
 }
 
 @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
-    .feature-card {
-        -webkit-backdrop-filter: blur(10px);
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .pomodoro-card {
-        -webkit-backdrop-filter: blur(15px);
-        backdrop-filter: blur(15px);
-        background: rgba(15, 12, 41, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
     header, .sidebar-container .swiper-slide, .tab-nav, #mobile-menu, .modal-content, #language-options {
         -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
