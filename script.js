@@ -432,7 +432,7 @@ const CozyWebApp = {
         const bg = document.getElementById('dynamic-bg');
         let stars = '';
         const starTypes = ['warm', 'cool', 'bright'];
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 80; i++) {
             const size = Math.random() * 4 + 1;
             const top = Math.random() * 100;
             const left = Math.random() * 100;
@@ -626,7 +626,7 @@ const CozyWebApp = {
         const layer = document.getElementById('rain-layer');
         if (!layer) return;
         const density = Math.max(0.3, Math.min(1, intensity || 0.6));
-        const count = Math.round(80 + density * 160);
+        const count = Math.round(50 + density * 100);
         let drops = '';
         for (let i = 0; i < count; i++) {
             const left = Math.random() * 100;
@@ -643,7 +643,7 @@ const CozyWebApp = {
         const layer = document.getElementById('snow-layer');
         if (!layer) return;
         const density = Math.max(0.25, Math.min(1, intensity || 0.5));
-        const count = Math.round(60 + density * 120);
+        const count = Math.round(40 + density * 80);
         let flakes = '';
         for (let i = 0; i < count; i++) {
             const left = Math.random() * 100;
@@ -1134,10 +1134,14 @@ const CozyWebApp = {
         }
     },
 
+    updateClockTick: 0,
     updateClock: function() {
         document.getElementById('clock').textContent = new Date().toLocaleTimeString(this.currentLanguage);
-        this.applyThemeBasedOnMode();
-        this.refreshWeather(new Date());
+        this.updateClockTick++;
+        if (this.updateClockTick % 30 === 0) {
+            this.applyThemeBasedOnMode();
+            this.refreshWeather(new Date());
+        }
     },
 
     saveSettings: async function() {

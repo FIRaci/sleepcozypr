@@ -100,9 +100,11 @@ body.deep-night .star { animation-duration: calc(var(--twinkle-duration, 4s) * 0
     border-radius: 50%;
     transition: background-color 0.8s ease-in-out, box-shadow 0.8s ease-in-out, opacity 0.5s, top 0.2s linear, left 0.2s linear;
     will-change: top, left, opacity;
-    display: none; 
+    display: none;
     z-index: 1;
 }
+.theme-dawn #sun, .theme-beach #sun { display: block; }
+.theme-default #moon, .theme-sunset #moon { display: block; }
 
 #sun {
     background-color: #FFD700;
